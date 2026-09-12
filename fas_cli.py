@@ -11,6 +11,7 @@ from pathlib import Path
 from fas_fallback import candidate_models, run_with_fallback
 from fas_git import changed_after, commit_if_changed, safe_push, status_porcelain
 from fas_runtime import init_repository, read_state, record_test, select_route, write_state
+from fas_watch import watch_and_recover
 from model_router import TaskSignals, available_models
 
 
@@ -30,6 +31,12 @@ def _parser() -> argparse.ArgumentParser:
     run.add_argument("--critical-review", action="store_true")
     run.add_argument("--latency-sensitive", action="store_true")
     run.add_argument("--test-cmd")
+    watch = sub.add_parser("watch", help="watch CI for HEAD and perform bounded recovery")
+    watch.add_argument("--repo", default=".")
+    watch.add_argument("--max-attempts", type=int, default=3)
+    watch.add_argument("--poll-limit", type=int, default=60)
+    watch.add_argument("--poll-seconds", type=float, default=5.0)
+    watch.add_argument("--test-cmd")
     return parser
 
 
@@ -102,7 +109,10 @@ def _run_task(args: argparse.Namespace) -> int:
             return test.returncode
 
     if os.environ.get("FAS_COMMIT") == "1":
-        commit_sha = commit_if_changed(str(repo), os.environ.get("FAS_COMMIT_MESSAGE", "chore: FAS autonomous change"))
+        commit_sha = commit_if_changed(
+            str(repo),
+            os.environ.get("FAS_COMMIT_MESSAGE", "chore: FAS autonomous change"),
+        )
         state = read_state(repo)
         state["git"]["commit_sha"] = commit_sha
         write_state(repo, state)
@@ -110,6 +120,41 @@ def _run_task(args: argparse.Namespace) -> int:
     if os.environ.get("FAS_PUSH") == "1":
         safe_push(str(repo))
 
+    return 0
+
+
+def _watch(args: argparse.Namespace) -> int:
+    repo = str(Path(args.repo).expanduser().resolve())
+    test_cmd = args.test_cmd or os.environ.get("FAS_TEST_CMD")
+
+    def repair_runner(task: str) -> int:
+        old_commit = os.environ.get("FAS_COMMIT")
+        old_push = os.environ.get("FAS_PUSH")
+        try:
+            os.environ["FAS_COMMIT"] = "1"
+            os.environ["FAS_PUSH"] = "1"
+            argv = ["run", task, "--repo", repo, "--recovery"]
+            if test_cmd:
+                argv.extend(["--test-cmd", test_cmd])
+            return main(argv)
+        finally:
+            if old_commit is None:
+                os.environ.pop("FAS_COMMIT", None)
+            else:
+                os.environ["FAS_COMMIT"] = old_commit
+            if old_push is None:
+                os.environ.pop("FAS_PUSH", None)
+            else:
+                os.environ["FAS_PUSH"] = old_push
+
+    result = watch_and_recover(
+        repo,
+        max_attempts=args.max_attempts,
+        poll_limit=args.poll_limit,
+        poll_seconds=args.poll_seconds,
+        repair_runner=repair_runner,
+    )
+    print(result)
     return 0
 
 
@@ -124,6 +169,8 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "init":
         print(init_repository(args.repo))
         return 0
+    if args.command == "watch":
+        return _watch(args)
     return _run_task(args)
 
 
