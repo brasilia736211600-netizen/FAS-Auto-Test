@@ -27,7 +27,7 @@ def run_with_fallback(
     command_factory: Callable[[str], Sequence[str]],
     candidates: Sequence[str],
     *,
-    runner: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run,
+    runner: Callable[..., subprocess.CompletedProcess[str]] | None = None,
     cwd: str | None = None,
     max_attempts: int = 3,
     should_retry: Callable[[ModelAttempt], bool] | None = None,
@@ -43,6 +43,7 @@ def run_with_fallback(
     if max_attempts < 1:
         raise ValueError("max_attempts must be positive")
 
+    actual_runner = runner or subprocess.run
     retry_policy = should_retry or (lambda attempt: attempt.returncode != 0)
     attempts: list[ModelAttempt] = []
     seen: set[str] = set()
@@ -53,7 +54,7 @@ def run_with_fallback(
         if len(attempts) >= max_attempts:
             break
         start = time.monotonic()
-        completed = runner(command_factory(model), cwd=cwd, check=False, text=True)
+        completed = actual_runner(command_factory(model), cwd=cwd, check=False, text=True)
         attempt = ModelAttempt(model, completed.returncode, time.monotonic() - start)
         attempts.append(attempt)
         if completed.returncode == 0:
