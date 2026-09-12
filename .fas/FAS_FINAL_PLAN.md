@@ -2,147 +2,71 @@
 
 ## 0. Status
 
-- Repository: `brasilia736211600-netizen/FAS-Auto-Test`
-- Active branch: `fas-feature-test`
-- Purpose: build and validate a phone-first autonomous software-engineering stack controlled from Termux.
-- Current validated implementation stage: autonomous local execution, testing, recovery, commit, subagents, parallel work, shared `.fas` state, and model benchmarking.
-- Next engineering stage: formalize model policy/router, finalize `.fas` state contract, add Git push and GitHub Actions CI ingestion, then bounded autonomous CI recovery and end-to-end validation.
+- Purpose: phone-first autonomous software engineering controlled from Termux.
+- Control engine: OpenCode.
+- Control plane: FAS.
+- Target: one user goal -> autonomous discovery/planning/build/test/review/commit/push/CI/recovery with minimal human intervention.
+- Current milestone: portable runtime, model routing/fallback, durable state, Git safety, CI evidence/recovery primitives, and `fas watch` are implemented and tested.
+- Latest validated CI milestone: 59 tests passed on GitHub Actions.
+- Current next milestone: real E2E CI failure -> repair -> push -> CI PASS, then clean-room portability and final Termux packaging/security validation.
 
-This document is the official human-readable FAS master plan. It is intentionally free of secrets, API keys, tokens, private keys, and encryption passwords.
+This file is the official human-readable FAS master plan. It contains no secrets.
 
 ---
 
 ## 1. Vision
 
-FAS (Full Autonomous Stack) is an orchestration and engineering-control layer around OpenCode.
-
-The user should provide one high-level task. FAS should then coordinate discovery, planning, implementation, testing, independent verification, commit/push, CI validation, diagnosis, and bounded recovery with minimal human intervention.
-
-### Target loop
-
 ```text
-YOU
-  |
-  v
-ONE TASK / GOAL
-  |
-  v
-FAS ORCHESTRATOR
-  |
-  v
-OpenCode
-  |
-  +--> Agent / Subagents / Models / Parallelism
-  |
-  v
-Discovery / Planning
-  |
-  v
-Parallel Subagents when independence is proven
-  |
-  v
-Shared FAS State (.fas/)
-  |
-  v
-Build / Implementation
-  |
-  v
-Tests
-  |
-  v
-Independent Review / Verification
-  |
-  v
-Commit
-  |
-  v
-Push
-  |
-  v
-GitHub Actions
-  |
-  +--> PASS --> DONE
-  |
-  +--> FAIL --> logs --> diagnosis --> repair --> tests --> commit --> push --> CI
+YOU -> ONE TASK -> FAS ORCHESTRATOR -> OpenCode
+    -> agents/subagents/parallelism when justified
+    -> shared .fas state
+    -> implementation -> tests -> independent verification
+    -> commit -> safe push -> GitHub Actions
+    -> PASS -> DONE
+    -> FAIL -> logs -> diagnosis -> repair -> tests -> commit -> push -> CI
 ```
 
----
-
-## 2. Core Responsibility Split
-
-### OpenCode
-
-OpenCode is the primary coding engine and execution environment.
-
-It is responsible for:
-- repository exploration;
-- planning and implementation;
-- agent and subagent invocation;
-- selecting or using the model configured by FAS;
-- editing files;
-- running commands and tests inside the workspace.
-
-### FAS
-
-FAS is the orchestration, policy, state, verification, and recovery layer.
-
-FAS is responsible for:
-- task normalization;
-- lifecycle control;
-- model capability policy/router;
-- safe concurrency decisions;
-- durable shared state;
-- evidence collection;
-- independent verification;
-- bounded retries and recovery;
-- git safety policy;
-- CI result ingestion;
-- deciding whether the task is actually complete.
-
-FAS must not duplicate capabilities that OpenCode already performs reliably. YAGNI applies to the orchestration layer.
+FAS is the orchestration/policy/state/verification/recovery layer. OpenCode remains the coding and execution engine.
 
 ---
 
-## 3. Non-Negotiable Engineering Principles
+## 2. Non-Negotiable Principles
 
-1. TDD whenever behavior is changed or introduced.
-2. YAGNI: implement only what is needed by the task and current architecture.
-3. Evidence over claims: tests, diffs, git status, CI logs, and concrete artifacts are authoritative.
-4. Never treat an agent Todo state as proof of completion.
-5. Use parallelism only when work is genuinely independent and merge/conflict risk is understood.
-6. Keep autonomous recovery bounded; no infinite retry loops.
-7. Git is the source of truth for code state.
-8. `.fas/` is the source of truth for operational orchestration state.
-9. Do not expose secrets to free or untrusted model providers.
-10. Do not use destructive git operations in autonomous mode.
-11. Prefer minimal, reversible changes.
-12. Runtime-phone testing is reserved primarily for consolidated validation; routine progress must not block on repeated manual APK testing.
+1. TDD for introduced/changed behavior.
+2. YAGNI and minimal scope.
+3. Evidence over claims.
+4. Todo/check-box state is never completion proof.
+5. Parallelism only when independence is proven.
+6. Recovery has a hard bound; default `MAX_ATTEMPTS=3`.
+7. Git is authoritative for code state.
+8. `.fas/` is authoritative for FAS operational state.
+9. Never expose secrets to unsuitable model providers.
+10. No destructive Git operations in autonomous mode.
+11. Prefer reversible, inspectable changes.
+12. Physical-device testing must not block ordinary progress.
+13. FAS must be portable across unrelated repositories.
+14. Normal operation must not depend on ChatGPT, this conversation, chat memory, or one permanent model.
 
 ---
 
-## 4. Proven OpenCode Agent Model
+## 3. OpenCode Agent Model
 
-Validated Subagents:
-
-- `Explore`: read-only repository/code exploration.
-- `General`: suitable for independent multi-unit work and parallel tasks.
+Validated subagents:
+- `Explore`: read-only exploration.
+- `General`: independent multi-unit work and parallel tasks.
 - `Scout`: documentation/dependency research.
 
-Primary agents used by the validated OpenCode workflow:
+Primary agents:
 - `Plan`
 - `Build`
 
-OpenCode has demonstrated actual subagent invocation and parallel execution in FAS benchmarks. FAS should therefore orchestrate at the task level rather than inventing a second agent framework.
-
-FAS must not hard-code assumptions such as "model X always uses Explore" or "model Y always performs Build". OpenCode should retain agent selection freedom where possible.
+OpenCode has demonstrated actual subagent invocation and parallel execution. FAS orchestrates at the task/policy level and does not create a duplicate agent framework.
 
 ---
 
-## 5. Durable FAS State
+## 4. Durable State
 
-The orchestration state must survive session loss, model changes, and agent restarts.
-
-Target structure:
+Operational structure:
 
 ```text
 .fas/
@@ -155,173 +79,102 @@ Target structure:
   logs/
 ```
 
-### Required state concepts
+The state contract records repository/task identity, lifecycle phase, route/model, attempt budget, tests, verification, Git data, CI data, failures, and timestamps. State must survive process/session/model changes.
 
-`state.json` should eventually record at least:
-- task identifier;
-- current lifecycle phase;
-- selected capability class/model;
-- attempt number;
-- active work units;
-- artifact paths;
-- test command and result;
-- verification result;
-- git commit SHA when committed;
-- CI run identifier/result when available;
-- failure classification and recovery status;
-- timestamps needed for external-duration measurement.
-
-### State rules
-
-- State must be machine-readable where practical.
-- Findings should be stored as durable artifacts, not only returned through chat/session memory.
-- Main agents must be able to consume findings written by subagents.
-- State must distinguish planned, attempted, verified, committed, and CI-validated status.
-- A checked box is not proof unless backed by evidence.
+`.fas/` is operational state, not project source. FAS excludes it locally from Git without changing the target project's tracked configuration by default.
 
 ---
 
-## 6. FAS Lifecycle
+## 5. Portability and Independence
 
-The target lifecycle is:
+FAS is installed once on the operator device and can target unrelated repositories:
 
 ```text
-READ
-  -> VERIFY
-  -> RECONCILE
-  -> PLAN
-  -> EXECUTE
-  -> TEST
-  -> DIFF
-  -> REVIEW
-  -> COMMIT
-  -> PUSH
-  -> CI
-  -> RECOVER (bounded, only on failure)
+FAS installation -> Repository A
+                 -> Repository B
+                 -> Repository C
 ```
 
-### READ
-Read authoritative repository context and task inputs.
+FAS must not copy its source into the target project. Normal operation must not require manual transfer of findings between models or any return to this conversation.
 
-### VERIFY
-Establish current branch, clean/dirty state, relevant files, test baseline, and applicable project rules.
+Human intervention is reserved for bounded stop conditions: missing credentials, unsafe/destructive actions, unresolved ambiguity, repeated failure, or missing required tooling.
 
-### RECONCILE
-Resolve conflicts between task requirements, repository reality, and stored FAS state.
+A clean-room repository test is mandatory for completion.
 
-### PLAN
-Create a minimal implementation plan with explicit verification criteria.
+---
 
-### EXECUTE
-Use OpenCode agents/subagents and parallelism only where justified.
+## 6. Lifecycle
 
-### TEST
-Run focused tests first, then broader relevant tests.
+```text
+READ -> VERIFY -> RECONCILE -> PLAN -> EXECUTE -> TEST
+     -> DIFF -> REVIEW -> COMMIT -> PUSH -> CI
+     -> RECOVER (bounded on actionable failure)
+```
 
-### DIFF
-Check patch correctness, scope, and `git diff --check`.
-
-### REVIEW
-Perform an independent verification pass. The reviewer must not simply trust the implementation agent's self-report.
-
-### COMMIT
-Commit only verified task-related changes with a compliant message.
-
-### PUSH
-Push only through the configured safe branch policy.
-
-### CI
-Consume GitHub Actions results and logs.
-
-### RECOVER
-On failure, classify the failure, repair the smallest necessary scope, retest, re-review, and retry within a strict attempt limit.
+Each transition requires evidence appropriate to the phase.
 
 ---
 
 ## 7. Safe Git Policy
 
-Autonomous mode must not execute:
-
+Never use:
 - `git reset --hard`
 - `git clean`
 - force-push
 - arbitrary deletion of unrelated files
-- checkout/overwrite operations that destroy user work
+- destructive checkout/overwrite operations
 - writes outside the intended workspace
 
-Before mutation:
-- establish repository and branch;
-- reject unexpected dirty state unless the workflow explicitly allows it;
-- keep task scope bounded;
-- inspect the resulting diff before commit.
+Before mutation, establish repository/branch state and detect unexpected changes. Before commit, inspect diff scope. Push is non-force and policy controlled.
 
 ---
 
-## 8. Current FAS Runner
+## 8. Current Runtime
 
-Validated runner path:
-
-```text
-~/bin/fas-run
-```
-
-Current execution contract:
+Portable CLI:
 
 ```text
-fas-run <repo> <task-file>
+fas init [repo]
+fas run <task> --repo <repo>
+fas watch --repo <repo>
 ```
 
-Current behavior:
-- rejects dirty working trees;
-- invokes `opencode run --auto --model provider/model --agent build`;
-- supports `FAS_MODEL`;
-- supports `FAS_TEST_CMD`;
-- performs `git diff --check`;
-- supports optional autonomous commit through `FAS_COMMIT=1`;
-- does not yet implement autonomous push/CI recovery.
+Implemented runtime pieces include:
+- `fas_cli.py`
+- `fas_runtime.py`
+- `model_router.py`
+- `fas_fallback.py`
+- `fas_git.py`
+- `fas_ci.py`
+- `fas_recovery.py`
+- `fas_watch.py`
 
-The runner is intentionally small. New orchestration should be introduced only when required by the next lifecycle gaps.
+Optional controls include `FAS_MODEL`, `FAS_TEST_CMD`, `FAS_COMMIT`, `FAS_COMMIT_MESSAGE`, and `FAS_PUSH`.
 
 ---
 
 ## 9. Proven Capabilities
 
-The following capabilities have been demonstrated in the FAS test repository:
+Demonstrated:
+- autonomous coding/testing;
+- local recovery from seeded defects;
+- autonomous commit;
+- real subagents;
+- real parallel subagents;
+- durable shared findings/state;
+- independent verification;
+- external wall-clock measurement;
+- bounded model fallback;
+- Git safety;
+- GitHub Actions execution and evidence artifacts.
 
-### Autonomous coding
-OpenCode created and modified project files from a task prompt and executed tests.
-
-### Recovery
-OpenCode corrected intentionally broken behavior and reached passing tests.
-
-### Engineering fixes
-Multiple tasks with several seeded defects were repaired with successful tests.
-
-### Autonomous commit
-With `FAS_COMMIT=1`, the runner produced a verified git commit and left the working tree clean.
-
-### Subagents
-OpenCode actually launched subagents rather than merely claiming to do so.
-
-### Parallel subagents
-Two Explore agents were actually launched in parallel for an FAS benchmark.
-
-### Shared state
-Subagents wrote durable `.fas/findings/*.md` artifacts and a state file; the main agent consumed those artifacts in later execution.
-
-### Independent verification
-A separate verification pass has been used to expose bugs that implementation-side self-reports did not reliably surface.
-
-### External timing
-FAS benchmarks use wall-clock duration measured outside the model's own reported timing, because model self-reported timing is not considered authoritative.
+The latest validated CI run reached `59 passed`.
 
 ---
 
 ## 10. Model Policy
 
-FAS should not permanently hard-code a single model as universally best.
-
-Instead use capability classes:
+Capability classes:
 
 ```text
 FAST / SIMPLE
@@ -332,307 +185,179 @@ RECOVERY
 CRITICAL REVIEW
 ```
 
-The router should use measured evidence and task characteristics. Candidate models have included:
+Previously benchmarked candidates include Ling, MiMo, Muse, Big Pickle, Nemotron 3.5 Lightning, and Nemotron 3 Ultra through their OpenCode model IDs.
 
-- `opencode/ling-3.0-flash-fin-free`
-- `opencode/nemotron-3.5-lightning-free`
-- `opencode/nemotron-3-ultra-free`
-- `opencode/mimo-v2.5-free`
-- `opencode/muse-spark-1.3-contributor-free`
-- `opencode/big-pickle`
-
-Current benchmark interpretation is qualitative, not a permanent ranking:
-- Ling: very fast and strong discovery, but needs scope guardrails.
-- MiMo: strong speed/quality balance; narrower edge-case discovery in some tests.
-- Muse: strong balanced behavior and good scope discipline.
-- Big Pickle: strongest overall balance in the latest multi-layer benchmark.
-- Nemotron 3.5 Lightning: reasonable speed but shallower discovery in some tasks.
-- Nemotron 3 Ultra: stronger reasoning in some cases, but high latency.
-
-These observations must remain empirical and revisable. Free-model availability and behavior can change.
+The router is intentionally deterministic and capability-based. It records the planned route and effective model, supports bounded fallback, and does not treat any free model as permanently best. External wall time is authoritative over model self-reported timing.
 
 ---
 
-## 11. Model Router Requirements
+## 11. Verification
 
-The next router must:
+Local evidence chain:
 
-1. classify task difficulty/capability needs;
-2. choose from currently available configured models;
-3. avoid rigid model-to-phase mappings unless evidence requires them;
-4. record selection rationale in `.fas/state.json`;
-5. measure actual wall time;
-6. support fallback after bounded failure;
-7. avoid sending secrets or sensitive repository content to unsuitable providers;
-8. remain replaceable when model availability changes.
+```text
+focused tests -> relevant suite -> git diff --check
+-> changed-file inspection -> independent review -> git status
+```
 
-The first version should be deterministic and small rather than an ML-based router.
+CI evidence chain:
+
+```text
+push -> GitHub Actions -> status/log capture -> PASS or failure class
+```
+
+Actionable failures may enter autonomous repair; unsafe or unknown failures stop the system.
 
 ---
 
-## 12. Verification Architecture
+## 12. Autonomous Recovery
 
-Verification is intentionally separate from implementation claims.
-
-Minimum local verification pipeline:
+Target:
 
 ```text
-focused tests
-  -> relevant suite
-  -> git diff --check
-  -> inspect changed files
-  -> independent review
-  -> git status
+MAX_ATTEMPTS=3
 ```
 
-CI verification pipeline:
+Recovery:
 
 ```text
-push
-  -> GitHub Actions
-  -> status/log capture
-  -> PASS or FAILURE CLASS
+CI failure
+ -> collect logs
+ -> classify
+ -> smallest repair hypothesis
+ -> OpenCode repair
+ -> focused/relevant tests
+ -> independent verification
+ -> commit
+ -> push
+ -> CI
 ```
 
-Failure classes should eventually include:
-- test failure;
-- lint/static analysis failure;
-- build failure;
-- dependency/toolchain failure;
-- workflow/configuration failure;
-- environment/network failure;
-- scope/safety violation;
-- unclear/unknown failure.
+Stop on success, exhausted budget, unsafe ambiguity, unrelated changes, missing credentials/tooling, or repeated identical failure without new evidence.
 
-Only failures that are safely actionable should enter autonomous repair.
+Model fallback and CI recovery are separate controls.
 
 ---
 
-## 13. Autonomous Recovery
+## 13. GitHub / CI Integration
 
-Recovery must be bounded.
-
-Target policy:
-
-```text
-MAX_ATTEMPTS = 3
-```
-
-The exact value may be adjusted by evidence, but there must always be a hard upper bound.
-
-Recovery loop:
-
-```text
-CI/local failure
-  -> collect evidence
-  -> classify failure
-  -> create minimal repair hypothesis
-  -> implement repair
-  -> focused tests
-  -> full relevant tests
-  -> independent review
-  -> commit
-  -> push
-  -> CI
-```
-
-Stop conditions:
-- verified success;
-- maximum attempts reached;
-- unsafe or ambiguous failure;
-- unrelated repository changes detected;
-- missing required credentials/tooling;
-- repeated identical failure without new evidence.
-
----
-
-## 14. GitHub / CI Integration
-
-Target capabilities:
-
+Implemented building blocks support:
 - safe branch push;
-- GitHub Actions workflow execution;
-- run/result identification;
-- log retrieval;
-- failure diagnosis;
-- bounded repair;
-- second CI attempt;
-- final durable verification record.
+- GitHub Actions execution;
+- machine-readable CI evidence;
+- failure-log capture;
+- recovery-task generation;
+- bounded `fas watch` recovery control.
 
-GitHub remains the authoritative remote source of truth for repository code and CI state.
+The critical remaining proof is an actual end-to-end cycle where CI is intentionally failed, FAS consumes the failure, repairs it, pushes the repair, and observes CI PASS.
 
 ---
 
-## 15. GitHub Actions Testing Strategy
+## 14. Testing Strategy
 
-The project should prioritize automated CI over repeated manual phone testing.
+Priority:
+1. unit tests;
+2. repository integration tests;
+3. FAS CLI/runtime tests;
+4. agent/subagent smoke tests;
+5. Git safety tests;
+6. GitHub Actions validation;
+7. real E2E CI recovery;
+8. final Android runtime validation only when required.
 
-Recommended layers:
-
-1. Unit tests.
-2. Repository integration tests.
-3. FAS runner tests.
-4. Autonomous-agent smoke tests.
-5. Git/commit safety tests.
-6. GitHub Actions validation.
-7. Consolidated Android runtime validation at the end when required.
-
-The CI pipeline must not depend on the user's physical Android device for ordinary development progress.
+Prefer combined automated checks and avoid repeated manual APK cycles.
 
 ---
 
-## 16. Secret Handling
+## 15. Secrets and Encryption
 
-The official FAS plan must never contain the encryption key.
+The plan must never contain keys/tokens/passwords.
 
-When confidential plan storage is needed:
-- use GitHub Environment/Secrets;
-- keep the secret out of Git history;
-- never pass it as an ordinary workflow input;
-- do not print it in logs;
-- use short-lived encrypted/decrypted artifacts;
-- delete temporary artifacts when no longer required.
+Confidential plan storage, when used, must rely on GitHub Environment/Secrets and short-lived artifacts. The existing encryption workflow scaffolding must be corrected and tested before being trusted; the previous `openssl enc` AES-GCM approach is not considered production-valid across OpenSSL versions.
 
-The repository currently contains workflow scaffolding for plan encryption/decryption. Those workflows are not part of the core FAS execution loop and should be corrected/tested before being relied upon for cryptographic storage.
-
-Important implementation note: the earlier encryption workflow used OpenSSL AES-GCM through `openssl enc`; many OpenSSL versions do not support AEAD modes such as GCM through `enc`. This must be fixed before the workflow is considered production-valid.
+Encryption is separate from the core autonomous coding loop.
 
 ---
 
-## 17. Current Known Limitations
+## 16. Current Milestone
 
-1. Push is not yet integrated into the local FAS runner.
-2. GitHub Actions result ingestion is not yet integrated into an autonomous repair loop.
-3. Model routing is not yet formalized as a tested policy component.
-4. `.fas/state.json` schema is conceptually defined but not yet finalized as a stable contract.
-5. Recovery is demonstrated locally but not yet closed through the full GitHub CI loop.
-6. Free-model behavior/availability may change.
-7. Some model benchmark tasks contained architectural ambiguity; benchmark rankings must not be treated as absolute.
-8. The current encryption workflow requires correction before confidential-plan automation is trusted.
+### Completed / validated
+- Model capability router core.
+- Durable state implementation/schema v1 tests.
+- Model fallback with workspace-safety guard.
+- Git commit and non-force push primitives.
+- Portable CLI/bootstrap.
+- CI evidence generation.
+- CI log/recovery primitives.
+- `fas watch` boundary.
+- 59-test green GitHub Actions milestone.
 
----
-
-## 18. Immediate Next Engineering Sequence
-
-The next work sequence is deliberately narrow:
-
-### Stage A — Model Policy / Router
-
-Build a minimal capability-based router with:
-- task classification;
-- model candidate registry/config;
-- fallback policy;
-- external timing;
-- state recording;
-- tests.
-
-### Stage B — Stable `.fas` State Contract
-
-Define and test the first stable `state.json` schema and lifecycle transitions.
-
-### Stage C — Safe Push
-
-Extend the runner with an explicit safe push stage after successful verification/commit.
-
-### Stage D — GitHub Actions Validation
-
-Add a CI workflow that exercises the FAS repository's required tests and emits machine-consumable status information.
-
-### Stage E — CI Failure Ingestion
-
-Capture workflow result and logs, classify failure, and write evidence into `.fas/verification/` and `.fas/logs/`.
-
-### Stage F — Bounded Autonomous CI Recovery
-
-Implement a small recovery controller with a strict maximum retry count.
-
-### Stage G — Full End-to-End Benchmark
-
-Validate the complete path:
-
-```text
-task
- -> model selection
- -> OpenCode
- -> subagents/parallelism when justified
- -> shared state
- -> implementation
- -> tests
- -> independent review
- -> commit
- -> push
- -> GitHub Actions
- -> intentional failure
- -> diagnosis
- -> repair
- -> retest
- -> commit
- -> push
- -> CI PASS
-```
-
-Only after Stage G should FAS be considered a consolidated autonomous engineering loop.
+### Still required
+- real E2E CI failure -> recovery -> CI PASS;
+- clean-room portability test on an unrelated repository;
+- final Termux installer/package workflow;
+- security/reliability review;
+- final real-project validation.
 
 ---
 
-## 19. Definition of Done for FAS Core
+## 17. Immediate Engineering Sequence
 
-FAS Core is considered complete when a single task can be handed to FAS and, without routine human intervention, it can:
+### Stage H — Real E2E Recovery
+
+Use a disposable CI fixture that intentionally fails once. FAS must identify the correct run, ingest its logs, formulate a repair task, perform one bounded repair, retest, commit/push, and observe the next CI run reach PASS. Persist final evidence.
+
+### Stage I — Clean-Room Portability
+
+Use a repository with no FAS implementation files and prove the installed FAS runtime can initialize, execute, test, commit/push when enabled, watch CI, recover, and leave no unexpected FAS source files or Git configuration changes.
+
+### Stage J — Termux Packaging
+
+Produce the smallest practical installer/bootstrap for the phone-first environment so the CLI is available from any target repository.
+
+### Stage K — Security / Reliability Gate
+
+Review shell invocation, paths, Git safety, permissions, secrets, model providers, fallback rules, retry budgets, and stop conditions.
+
+### Stage L — Final Consolidated Validation
+
+Run the complete flow on a disposable repository, then one carefully selected real project. Only then declare FAS Core complete.
+
+---
+
+## 18. Definition of Done
+
+FAS Core is complete only when one installed FAS instance, on a repository other than `FAS-Auto-Test`, can autonomously:
 
 1. inspect authoritative repository state;
-2. choose an appropriate model capability path;
-3. plan and execute the change through OpenCode;
+2. select a suitable capability/model path;
+3. plan and execute through OpenCode;
 4. use subagents/parallelism when justified;
-5. persist shared state and findings;
-6. run required tests;
-7. perform independent verification;
-8. reject unsafe/unrelated changes;
-9. commit verified changes;
-10. push through safe policy;
-11. read GitHub Actions outcome;
-12. repair actionable failures within a bounded retry budget;
-13. stop with durable evidence of success or a precise failure state.
+5. persist state/findings;
+6. run tests and independent verification;
+7. reject unsafe/unrelated changes;
+8. commit and push safely;
+9. identify and consume GitHub Actions results;
+10. repair actionable CI failures within a hard retry budget;
+11. re-run verification and CI;
+12. finish with durable evidence of success or a precise terminal failure.
 
-The system is not complete merely because an agent says "done" or because local tests pass.
-
----
-
-## 20. Change-Control Rule for This Plan
-
-This file is the official plan reference, but it is not self-updating.
-
-After each major FAS milestone, review whether this plan remains accurate.
-
-A new official version must only be written to GitHub after explicit human authorization.
-
-No automatic milestone process may silently replace the official plan.
+Normal operation must not require this conversation, ChatGPT, manual model-to-model coordination, or one permanent model.
 
 ---
 
-## 21. Evidence Log Snapshot
+## 19. Change Control
 
-Validated repository milestones to date include:
-
-- `511a6d6` — `test: establish FAS autonomous baseline`
-- `4d63122` — `test: validate FAS runner execution`
-- `49b3540` — `feat: autonomous FAS task`
-
-Latest validated commit `49b3540` demonstrated autonomous task execution with tests, diff validation, and an actual autonomous commit.
-
-Subsequent benchmarks also validated subagents, parallel subagents, shared state, independent verification, recovery, and comparative model testing.
+This file is the official FAS plan and is not self-updating. It is updated only after explicit authorization. It must never contain secrets.
 
 ---
 
-## 22. Guiding Principle
+## 20. Guiding Principle
 
-FAS should remain a small, evidence-driven control plane around a capable coding engine.
+For every proposed component ask:
 
-Do not build orchestration for its own sake.
-
-Every new component must answer three questions:
-
-1. What failure or capability gap does it solve?
-2. What evidence verifies that it works?
+1. Does this directly support the autonomous engineering loop?
+2. Is it independently verifiable?
 3. Why can OpenCode, GitHub Actions, or an existing project mechanism not already solve it safely?
 
-If those answers are not clear, do not add the component.
+If these answers are not clear, do not add the component.
