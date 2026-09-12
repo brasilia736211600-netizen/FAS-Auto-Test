@@ -42,9 +42,10 @@ def _parser() -> argparse.ArgumentParser:
 
 def _run_task(args: argparse.Namespace) -> int:
     repo = Path(args.repo).expanduser().resolve()
-    state = read_state(repo)
-    if state.get("repository") != str(repo):
+    state_file = repo / ".fas" / "state.json"
+    if not state_file.exists():
         init_repository(repo)
+    state = read_state(repo)
 
     signals = TaskSignals(
         files_changed=args.files_changed,
