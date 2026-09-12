@@ -68,12 +68,7 @@ def test_watch_rejects_zero_budget():
 
 
 def test_watch_allows_up_to_three_recovery_attempts(monkeypatch):
-    monkeypatch.setattr("fas_watch.current_sha", lambda repository, runner=None: "abc")
-    monkeypatch.setattr(
-        "fas_watch.find_run",
-        lambda repository, sha, runner=None: WorkflowRun(7, "completed", "failure", sha, "FAS CI"),
-    )
-    shas = iter(["abc", "def", "ghi"])
+    shas = iter(["abc", "def", "ghi", "jkl"])
     monkeypatch.setattr("fas_watch.current_sha", lambda repository, runner=None: next(shas))
     monkeypatch.setattr("fas_watch.recover_once", lambda *args, **kwargs: 0)
     runs = iter([
