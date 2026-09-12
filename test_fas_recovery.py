@@ -1,4 +1,3 @@
-import json
 import subprocess
 
 from fas_recovery import build_repair_task, failed_logs, persist_failure_logs, recover_once
@@ -41,12 +40,6 @@ def test_recover_once_persists_logs_and_invokes_one_repair(tmp_path, monkeypatch
         received.append(task)
         return 0
 
-    assert recover_once("owner/repo", 7, repair_runner=repair_runner) == 0
-    assert received and "failure from CI" not in received[0]
-    assert (tmp_path / ".fas" / "logs" / "ci-failure.log").exists() is False
-
-
-def test_recovery_log_payload_is_plain_text(tmp_path):
-    # Ensure the recovery artifact is not a structured secret-bearing object.
-    path = persist_failure_logs(tmp_path, "line 1\nline 2\n")
-    assert json.loads(json.dumps({"path": str(path)}))["path"].endswith("ci-failure.log")
+    assert recover_once(str(tmp_path), 7, repair_runner=repair_runner) == 0
+    assert received and "ci-failure.log" in received[0]
+    assert (tmp_path / ".fas" / "logs" / "ci-failure.log").read_text(encoding="utf-8") == "failure from CI"
