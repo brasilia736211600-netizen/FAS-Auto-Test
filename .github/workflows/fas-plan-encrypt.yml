@@ -1,0 +1,42 @@
+name: FAS Plan - Encrypt
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  encrypt:
+    runs-on: ubuntu-latest
+    environment:
+      name: fas-private-crypto
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate plan source
+        run: |
+          set -euo pipefail
+          test -f .fas/FAS_FINAL_PLAN.md
+          test -n "${FAS_PLAN_KEY:-}"
+
+      - name: Encrypt plan
+        env:
+          FAS_PLAN_KEY: ${{ secrets.FAS_PLAN_KEY }}
+        run: |
+          set -euo pipefail
+          umask 077
+          printf '%s' "$FAS_PLAN_KEY" | sha256sum | cut -d' ' -f1 > key.check
+          openssl enc -aes-256-gcm -pbkdf2 -iter 200000 -salt \
+            -in .fas/FAS_FINAL_PLAN.md \
+            -out .fas/FAS_FINAL_PLAN.enc \
+            -pass env:FAS_PLAN_KEY
+          rm -f key.check
+
+      - name: Upload encrypted plan artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: FAS-FINAL-PLAN-ENCRYPTED
+          path: .fas/FAS_FINAL_PLAN.enc
+          retention-days: 1
