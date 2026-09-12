@@ -1,9 +1,4 @@
-"""Portable FAS runtime primitives.
-
-This module is repository-agnostic: it creates durable .fas state inside the
-selected repository and records lifecycle transitions without depending on a
-chat session or a specific project layout.
-"""
+"""Portable FAS runtime primitives."""
 from __future__ import annotations
 
 import json
@@ -12,6 +7,7 @@ import time
 from pathlib import Path
 from typing import Any
 
+from fas_git import ensure_fas_excluded
 from model_router import TaskSignals, route
 
 STATE_VERSION = 1
@@ -77,7 +73,9 @@ def read_state(repo: str | Path) -> dict[str, Any]:
 
 
 def init_repository(repo: str | Path) -> Path:
-    state = initial_state(repo)
+    root = repo_root(repo)
+    ensure_fas_excluded(str(root))
+    state = initial_state(root)
     try:
         branch = subprocess.run(
             ["git", "-C", state["repository"], "branch", "--show-current"],
@@ -88,7 +86,7 @@ def init_repository(repo: str | Path) -> Path:
         state["git"]["branch"] = branch or None
     except subprocess.CalledProcessError:
         pass
-    return write_state(repo, state)
+    return write_state(root, state)
 
 
 def select_route(repo: str | Path, signals: TaskSignals) -> dict[str, str]:
