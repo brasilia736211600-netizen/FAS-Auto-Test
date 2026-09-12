@@ -8,8 +8,10 @@ import sys
 import time
 from pathlib import Path
 
+from fas_fallback import candidate_models, run_with_fallback
+from fas_git import changed_after, status_porcelain
 from fas_runtime import init_repository, read_state, record_test, select_route, write_state
-from model_router import TaskSignals
+from model_router import TaskSignals, available_models
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -47,18 +49,39 @@ def _run_task(args: argparse.Namespace) -> int:
         latency_sensitive=args.latency_sensitive,
     )
     planned_route = select_route(repo, signals)
-    model = os.environ.get("FAS_MODEL", planned_route["model"])
+    configured = available_models()[planned_route["capability"]]
+    override = os.environ.get("FAS_MODEL")
+    candidates = tuple(dict.fromkeys(((override,) if override else ()) + candidate_models(_route_decision(planned_route), configured)))
+    baseline = status_porcelain(str(repo))
 
-    start = time.monotonic()
-    completed = subprocess.run(
-        ["opencode", "run", "--auto", "--model", model, "--agent", "build", args.task],
-        cwd=repo,
-        check=False,
+    def retry_only_if_repository_unchanged(_attempt: object) -> bool:
+        return not changed_after(str(repo), baseline)
+
+    result = run_with_fallback(
+        lambda model: ["opencode", "run", "--auto", "--model", model, "--agent", "build", args.task],
+        candidates,
+        cwd=str(repo),
+        max_attempts=state.get("max_attempts", 3),
+        should_retry=retry_only_if_repository_unchanged,
     )
-    duration = time.monotonic() - start
-    if completed.returncode != 0:
-        record_test(repo, "opencode run", f"FAIL:{completed.returncode}", duration)
-        return completed.returncode
+
+    state = read_state(repo)
+    state["phase"] = "EXECUTE"
+    state["attempt"] = len(result.attempts)
+    state["route"] = dict(planned_route)
+    state["route"]["effective_model"] = result.selected_model
+    state["route"]["attempts"] = [
+        {
+            "model": attempt.model,
+            "returncode": attempt.returncode,
+            "duration_seconds": round(attempt.duration_seconds, 3),
+        }
+        for attempt in result.attempts
+    ]
+    write_state(repo, state)
+
+    if not result.success:
+        return result.attempts[-1].returncode if result.attempts else 1
 
     test_cmd = args.test_cmd or os.environ.get("FAS_TEST_CMD")
     if test_cmd:
@@ -72,14 +95,13 @@ def _run_task(args: argparse.Namespace) -> int:
         )
         if test.returncode != 0:
             return test.returncode
-
-    state = read_state(repo)
-    state["phase"] = "EXECUTE"
-    state["attempt"] = max(1, state.get("attempt", 0))
-    state["route"] = dict(planned_route)
-    state["route"]["effective_model"] = model
-    write_state(repo, state)
     return 0
+
+
+def _route_decision(route: dict[str, str]):
+    from model_router import Capability, RouteDecision
+
+    return RouteDecision(Capability(route["capability"]), route["model"], route["reason"])
 
 
 def main(argv: list[str] | None = None) -> int:
