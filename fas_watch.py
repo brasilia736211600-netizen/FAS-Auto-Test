@@ -5,7 +5,7 @@ import subprocess
 import time
 from typing import Callable
 
-from fas_github import classify_run, find_run, view_run
+from fas_github import classify_run, find_run
 from fas_recovery import recover_once
 
 
@@ -32,19 +32,23 @@ def watch_and_recover(
     runner=subprocess.run,
     repair_runner: Callable[[str], int],
 ) -> str:
-    """Watch the CI run for HEAD and recover actionable failures only."""
+    """Watch CI and perform bounded recovery until PASS or a stop condition."""
     if max_attempts < 1:
         raise ValueError("max_attempts must be positive")
     if poll_limit < 1:
         raise ValueError("poll_limit must be positive")
+
     sha = current_sha(repository, runner=runner)
     attempts = 0
+    polls = 0
 
-    for _ in range(poll_limit):
+    while polls < poll_limit:
+        polls += 1
         run = find_run(repository, sha, runner=runner)
         if run is None:
             time.sleep(poll_seconds)
             continue
+
         outcome = classify_run(run)
         if outcome == "pending":
             time.sleep(poll_seconds)
@@ -53,11 +57,19 @@ def watch_and_recover(
             return "success"
         if outcome != "failure":
             return outcome
+
         attempts += 1
-        if attempts >= max_attempts:
+        if attempts > max_attempts:
             raise RecoveryBudgetExceeded("CI recovery attempt budget exhausted")
+
         if recover_once(repository, run.database_id, repair_runner=repair_runner) != 0:
             return "repair_failed"
-        return "repaired"
+
+        # A successful repair must produce a new commit/push before we watch
+        # again. Refresh HEAD so the next lookup cannot accept the old failed run.
+        new_sha = current_sha(repository, runner=runner)
+        if new_sha == sha:
+            return "repair_not_pushed"
+        sha = new_sha
 
     return "poll_limit_exhausted"
