@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import subprocess
-
+from pathlib import Path
 
 FORBIDDEN_GIT_OPERATIONS = {
     "reset --hard",
@@ -31,12 +31,30 @@ def changed_after(repo: str, before: str) -> bool:
     return status_porcelain(repo) != before
 
 
-def safe_push(repo: str, *, remote: str = "origin", branch: str | None = None) -> None:
-    """Push without force and only from a clean tree.
+def ensure_fas_excluded(repo: str) -> None:
+    """Keep FAS operational state local without changing tracked project files."""
+    root = Path(repo).resolve()
+    git_dir = subprocess.run(
+        ["git", "-C", str(root), "rev-parse", "--git-dir"],
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    git_path = Path(git_dir)
+    if not git_path.is_absolute():
+        git_path = root / git_path
+    exclude = git_path / "info" / "exclude"
+    exclude.parent.mkdir(parents=True, exist_ok=True)
+    marker = ".fas/"
+    existing = exclude.read_text(encoding="utf-8") if exclude.exists() else ""
+    lines = {line.strip() for line in existing.splitlines() if line.strip()}
+    if marker not in lines:
+        prefix = "" if not existing or existing.endswith("\n") else "\n"
+        exclude.write_text(existing + prefix + marker + "\n", encoding="utf-8")
 
-    The caller must choose the target branch explicitly when it is not the
-    currently checked-out branch.
-    """
+
+def safe_push(repo: str, *, remote: str = "origin", branch: str | None = None) -> None:
+    """Push without force and only from a clean tree."""
     assert_clean(repo)
     target = branch
     if not target:
