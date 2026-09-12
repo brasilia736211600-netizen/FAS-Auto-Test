@@ -74,5 +74,5 @@ def test_commit_if_changed_uses_normal_commit(monkeypatch):
     monkeypatch.setattr(subprocess, "run", fake_run)
     assert commit_if_changed(".", "feat: test") == "abc123"
     assert calls[1][-2:] == ["add", "-A"]
-    assert calls[2][2:4] == ["commit", "-m"]
+    assert calls[2][3:5] == ["commit", "-m"]
     assert "--force" not in calls[2]
