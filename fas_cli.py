@@ -9,7 +9,7 @@ import time
 from pathlib import Path
 
 from fas_fallback import candidate_models, run_with_fallback
-from fas_git import changed_after, status_porcelain
+from fas_git import changed_after, commit_if_changed, safe_push, status_porcelain
 from fas_runtime import init_repository, read_state, record_test, select_route, write_state
 from model_router import TaskSignals, available_models
 
@@ -51,7 +51,12 @@ def _run_task(args: argparse.Namespace) -> int:
     planned_route = select_route(repo, signals)
     configured = available_models()[planned_route["capability"]]
     override = os.environ.get("FAS_MODEL")
-    candidates = tuple(dict.fromkeys(((override,) if override else ()) + candidate_models(_route_decision(planned_route), configured)))
+    candidates = tuple(
+        dict.fromkeys(
+            ((override,) if override else ())
+            + candidate_models(_route_decision(planned_route), configured)
+        )
+    )
     baseline = status_porcelain(str(repo))
 
     def retry_only_if_repository_unchanged(_attempt: object) -> bool:
@@ -95,6 +100,16 @@ def _run_task(args: argparse.Namespace) -> int:
         )
         if test.returncode != 0:
             return test.returncode
+
+    if os.environ.get("FAS_COMMIT") == "1":
+        commit_sha = commit_if_changed(str(repo), os.environ.get("FAS_COMMIT_MESSAGE", "chore: FAS autonomous change"))
+        state = read_state(repo)
+        state["git"]["commit_sha"] = commit_sha
+        write_state(repo, state)
+
+    if os.environ.get("FAS_PUSH") == "1":
+        safe_push(str(repo))
+
     return 0
 
 
