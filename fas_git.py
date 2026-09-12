@@ -53,6 +53,21 @@ def ensure_fas_excluded(repo: str) -> None:
         exclude.write_text(existing + prefix + marker + "\n", encoding="utf-8")
 
 
+def commit_if_changed(repo: str, message: str) -> str | None:
+    """Create a normal commit only when project files changed."""
+    current = status_porcelain(repo)
+    if not current:
+        return None
+    subprocess.run(["git", "-C", repo, "add", "-A"], check=True)
+    subprocess.run(["git", "-C", repo, "commit", "-m", message], check=True)
+    return subprocess.run(
+        ["git", "-C", repo, "rev-parse", "HEAD"],
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+
+
 def safe_push(repo: str, *, remote: str = "origin", branch: str | None = None) -> None:
     """Push without force and only from a clean tree."""
     assert_clean(repo)
