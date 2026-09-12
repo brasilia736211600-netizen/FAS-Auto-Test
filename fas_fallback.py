@@ -30,17 +30,20 @@ def run_with_fallback(
     runner: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run,
     cwd: str | None = None,
     max_attempts: int = 3,
+    should_retry: Callable[[ModelAttempt], bool] | None = None,
 ) -> FallbackResult:
     """Try distinct model candidates with a hard attempt bound.
 
-    The runner is injectable for deterministic tests. No retry occurs after the
-    bound and the first successful model is retained as the effective model.
+    ``should_retry`` can veto a retry after a failed attempt. FAS uses this to
+    prevent another model from starting when the failed model left repository
+    changes behind.
     """
     if not candidates:
         raise ValueError("at least one model candidate is required")
     if max_attempts < 1:
         raise ValueError("max_attempts must be positive")
 
+    retry_policy = should_retry or (lambda attempt: attempt.returncode != 0)
     attempts: list[ModelAttempt] = []
     seen: set[str] = set()
     for model in candidates:
@@ -51,10 +54,12 @@ def run_with_fallback(
             break
         start = time.monotonic()
         completed = runner(command_factory(model), cwd=cwd, check=False, text=True)
-        duration = time.monotonic() - start
-        attempts.append(ModelAttempt(model, completed.returncode, duration))
+        attempt = ModelAttempt(model, completed.returncode, time.monotonic() - start)
+        attempts.append(attempt)
         if completed.returncode == 0:
             return FallbackResult(True, model, tuple(attempts))
+        if not retry_policy(attempt):
+            break
 
     return FallbackResult(False, None, tuple(attempts))
 
