@@ -35,6 +35,7 @@ def state_path(repo: str | Path) -> Path:
 
 def initial_state(repo: str | Path) -> dict[str, Any]:
     root = repo_root(repo)
+    now = int(time.time())
     return {
         "schema_version": STATE_VERSION,
         "repository": str(root),
@@ -49,14 +50,16 @@ def initial_state(repo: str | Path) -> dict[str, Any]:
         "git": {"branch": None, "commit_sha": None},
         "ci": {"run_id": None, "result": None},
         "failure": {"class": None, "message": None},
-        "timestamps": {"created": int(time.time()), "updated": int(time.time())},
+        "timestamps": {"created": now, "updated": now},
     }
 
 
 def write_state(repo: str | Path, state: dict[str, Any]) -> Path:
     path = state_path(repo)
     path.parent.mkdir(parents=True, exist_ok=True)
-    state["timestamps"]["updated"] = int(time.time())
+    timestamps = state.setdefault("timestamps", {})
+    timestamps.setdefault("created", int(time.time()))
+    timestamps["updated"] = int(time.time())
     temp = path.with_suffix(".json.tmp")
     temp.write_text(json.dumps(state, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     temp.replace(path)
