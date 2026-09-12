@@ -20,6 +20,7 @@ def test_cli_run_uses_router_model_when_no_override(monkeypatch, tmp_path):
         "repository": str(repo.resolve()),
         "phase": "READ",
         "attempt": 0,
+        "max_attempts": 3,
         "route": None,
         "test": {},
     }
@@ -30,11 +31,15 @@ def test_cli_run_uses_router_model_when_no_override(monkeypatch, tmp_path):
         "select_route",
         lambda *_: {"capability": "fast_simple", "model": "custom/model", "reason": "test"},
     )
-    monkeypatch.setattr(
-        fas_cli.subprocess,
-        "run",
-        lambda command, **kwargs: calls.append((command, kwargs)) or subprocess.CompletedProcess(command, 0),
-    )
+    monkeypatch.setattr(fas_cli, "status_porcelain", lambda _: "")
+    monkeypatch.setattr(fas_cli, "changed_after", lambda *_: False)
+    monkeypatch.setattr(fas_cli, "write_state", lambda *_args, **_kwargs: Path(tmp_path / "state.json"))
+
+    def fake_run(command, **kwargs):
+        calls.append((command, kwargs))
+        return subprocess.CompletedProcess(command, 0)
+
+    monkeypatch.setattr(fas_cli.subprocess, "run", fake_run)
     monkeypatch.setattr(fas_cli, "record_test", lambda *args: Path(tmp_path / "recorded.json"))
 
     assert fas_cli.main(["run", "do work", "--repo", str(repo)]) == 0
@@ -45,18 +50,19 @@ def test_cli_run_uses_router_model_when_no_override(monkeypatch, tmp_path):
     assert command[-1] == "do work"
 
 
-def test_cli_model_override_does_not_change_persisted_selection(monkeypatch, tmp_path):
+def test_cli_model_override_is_effective_but_router_choice_remains_planned(monkeypatch, tmp_path):
     repo = tmp_path / "repo"
     repo.mkdir()
-    states = []
     base = {
         "schema_version": 1,
         "repository": str(repo.resolve()),
         "phase": "READ",
         "attempt": 0,
+        "max_attempts": 3,
         "route": None,
         "test": {},
     }
+    persisted = []
 
     monkeypatch.setattr(fas_cli, "read_state", lambda _: base.copy())
     monkeypatch.setattr(
@@ -64,19 +70,20 @@ def test_cli_model_override_does_not_change_persisted_selection(monkeypatch, tmp
         "select_route",
         lambda *_: {"capability": "fast_simple", "model": "planned/model", "reason": "test"},
     )
-
-    def fake_run(command, **kwargs):
-        return subprocess.CompletedProcess(command, 0)
-
-    monkeypatch.setattr(fas_cli.subprocess, "run", fake_run)
+    monkeypatch.setattr(fas_cli, "status_porcelain", lambda _: "")
+    monkeypatch.setattr(fas_cli, "changed_after", lambda *_: False)
+    monkeypatch.setattr(
+        fas_cli,
+        "write_state",
+        lambda _repo, value: persisted.append(value) or Path(tmp_path / "state.json"),
+    )
+    monkeypatch.setattr(fas_cli.subprocess, "run", lambda command, **kwargs: subprocess.CompletedProcess(command, 0))
     monkeypatch.setattr(fas_cli, "record_test", lambda *args: None)
     monkeypatch.setenv("FAS_MODEL", "override/model")
 
-    # The CLI should use the override for execution, while the planned route
-    # remains the router's durable decision.
     assert fas_cli.main(["run", "do work", "--repo", str(repo)]) == 0
-    state_file = repo / ".fas" / "state.json"
-    assert state_file.exists()
+    assert persisted[-1]["route"]["model"] == "planned/model"
+    assert persisted[-1]["route"]["effective_model"] == "override/model"
 
 
 def test_cli_parser_requires_task_for_run():
