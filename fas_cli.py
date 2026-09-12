@@ -2,24 +2,21 @@
 from __future__ import annotations
 
 import argparse
-import json
 import os
 import subprocess
 import sys
 import time
 from pathlib import Path
 
-from fas_runtime import init_repository, read_state, record_test, select_route
+from fas_runtime import init_repository, read_state, record_test, select_route, write_state
 from model_router import TaskSignals
 
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="fas")
     sub = parser.add_subparsers(dest="command", required=True)
-
     init = sub.add_parser("init", help="initialize durable FAS state")
     init.add_argument("repo", nargs="?", default=".")
-
     run = sub.add_parser("run", help="run one task through OpenCode")
     run.add_argument("task")
     run.add_argument("--repo", default=".")
@@ -37,7 +34,7 @@ def _parser() -> argparse.ArgumentParser:
 def _run_task(args: argparse.Namespace) -> int:
     repo = Path(args.repo).expanduser().resolve()
     state = read_state(repo)
-    if state["repository"] != str(repo):
+    if state.get("repository") != str(repo):
         init_repository(repo)
 
     signals = TaskSignals(
@@ -49,26 +46,16 @@ def _run_task(args: argparse.Namespace) -> int:
         critical_review=args.critical_review,
         latency_sensitive=args.latency_sensitive,
     )
-    decision = select_route(repo, signals)
-    model = os.environ.get("FAS_MODEL", decision["model"])
+    planned_route = select_route(repo, signals)
+    model = os.environ.get("FAS_MODEL", planned_route["model"])
 
     start = time.monotonic()
     completed = subprocess.run(
-        [
-            "opencode",
-            "run",
-            "--auto",
-            "--model",
-            model,
-            "--agent",
-            "build",
-            args.task,
-        ],
+        ["opencode", "run", "--auto", "--model", model, "--agent", "build", args.task],
         cwd=repo,
         check=False,
     )
     duration = time.monotonic() - start
-
     if completed.returncode != 0:
         record_test(repo, "opencode run", f"FAIL:{completed.returncode}", duration)
         return completed.returncode
@@ -90,8 +77,7 @@ def _run_task(args: argparse.Namespace) -> int:
     state["phase"] = "EXECUTE"
     state["attempt"] = max(1, state["attempt"])
     state["route"]["effective_model"] = model
-    state_path = repo / ".fas" / "state.json"
-    state_path.write_text(json.dumps(state, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    write_state(repo, state)
     return 0
 
 
