@@ -11,9 +11,11 @@ def test_cli_init_delegates_to_portable_state(monkeypatch, tmp_path, capsys):
     assert str(expected) in capsys.readouterr().out
 
 
-def test_cli_run_uses_router_model_when_no_override(monkeypatch, tmp_path):
+def test_cli_run_bootstraps_state_and_uses_router_model(monkeypatch, tmp_path):
     repo = tmp_path / "repo"
     repo.mkdir()
+    (repo / ".fas").mkdir()
+    (repo / ".fas" / "state.json").write_text("{}", encoding="utf-8")
     calls = []
     state = {
         "schema_version": 1,
@@ -53,6 +55,8 @@ def test_cli_run_uses_router_model_when_no_override(monkeypatch, tmp_path):
 def test_cli_model_override_is_effective_but_router_choice_remains_planned(monkeypatch, tmp_path):
     repo = tmp_path / "repo"
     repo.mkdir()
+    (repo / ".fas").mkdir()
+    (repo / ".fas" / "state.json").write_text("{}", encoding="utf-8")
     base = {
         "schema_version": 1,
         "repository": str(repo.resolve()),
