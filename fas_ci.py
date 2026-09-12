@@ -6,9 +6,7 @@ import os
 import time
 from pathlib import Path
 
-
 FAILURE_CLASSES = {
-    "test": "test_failure",
     "failure": "unknown_failure",
     "cancelled": "workflow_configuration_failure",
     "timed_out": "environment_or_toolchain_failure",
@@ -22,11 +20,26 @@ def classify(conclusion: str | None) -> str:
     return FAILURE_CLASSES.get(normalized, "unknown_failure")
 
 
-def write_ci_evidence(repo: str | Path, *, run_id: str | None = None, conclusion: str | None = None) -> Path:
+def _default_conclusion() -> str:
+    explicit = os.environ.get("JOB_CONCLUSION")
+    if explicit:
+        return explicit
+    test_status = os.environ.get("TEST_STATUS")
+    if test_status is not None:
+        return "success" if test_status == "0" else "failure"
+    return "failure"
+
+
+def write_ci_evidence(
+    repo: str | Path,
+    *,
+    run_id: str | None = None,
+    conclusion: str | None = None,
+) -> Path:
     root = Path(repo).expanduser().resolve()
     target = root / ".fas" / "verification" / "ci_result.json"
     target.parent.mkdir(parents=True, exist_ok=True)
-    resolved_conclusion = conclusion or os.environ.get("JOB_CONCLUSION") or "failure"
+    resolved_conclusion = conclusion or _default_conclusion()
     payload = {
         "schema_version": 1,
         "provider": "github_actions",
