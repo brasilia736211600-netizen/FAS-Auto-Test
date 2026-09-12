@@ -75,7 +75,8 @@ def _run_task(args: argparse.Namespace) -> int:
 
     state = read_state(repo)
     state["phase"] = "EXECUTE"
-    state["attempt"] = max(1, state["attempt"])
+    state["attempt"] = max(1, state.get("attempt", 0))
+    state["route"] = dict(planned_route)
     state["route"]["effective_model"] = model
     write_state(repo, state)
     return 0
