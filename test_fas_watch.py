@@ -31,6 +31,44 @@ def test_watch_recovers_and_then_accepts_new_passing_commit(monkeypatch):
     assert seen == [("owner/repo", 7)]
 
 
+def test_watch_composes_with_real_recovery_bridge(monkeypatch, tmp_path):
+    import fas_recovery
+
+    e2e = tmp_path / "e2e"
+    e2e.mkdir()
+    (e2e / "test_live_fixture.py").write_text("assert True\n", encoding="utf-8")
+    monkeypatch.setattr("fas_recovery.ensure_fas_excluded", lambda repo: None)
+    monkeypatch.setattr(
+        "fas_recovery.failed_logs",
+        lambda repository, run_id: "FAILED test_live_fixture.py::test_addition",
+    )
+
+    shas = iter(["abc", "def"])
+    monkeypatch.setattr("fas_watch.current_sha", lambda repository, runner=None: next(shas))
+    runs = iter([
+        WorkflowRun(7, "completed", "failure", "abc", "FAS CI"),
+        WorkflowRun(8, "completed", "success", "def", "FAS CI"),
+    ])
+    monkeypatch.setattr("fas_watch.find_run", lambda repository, sha, runner=None: next(runs))
+    seen = []
+
+    def recovery_bridge(repository, run_id, repair_runner):
+        return fas_recovery.recover_once(repository, run_id, repair_runner=repair_runner)
+
+    monkeypatch.setattr("fas_watch.recover_once", recovery_bridge)
+    monkeypatch.delenv("FAS_ALLOWED_PATHS", raising=False)
+
+    result = watch_and_recover(
+        str(tmp_path),
+        repair_runner=lambda task: seen.append(task) or 0,
+        runner=lambda *a, **k: None,
+    )
+
+    assert result == "success"
+    assert seen and "e2e/" in seen[0]
+    assert (tmp_path / ".fas" / "logs" / "ci-failure.log").exists()
+
+
 def test_watch_stops_when_repair_fails(monkeypatch):
     monkeypatch.setattr("fas_watch.current_sha", lambda repository, runner=None: "abc")
     monkeypatch.setattr(
