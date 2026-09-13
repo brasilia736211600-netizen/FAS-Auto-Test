@@ -2,7 +2,7 @@ name: FAS CI
 
 on:
   push:
-    branches: ["fas-feature-test"]
+    branches: ["fas-feature-test", "fas-e2e-live"]
   pull_request:
 
 permissions:
