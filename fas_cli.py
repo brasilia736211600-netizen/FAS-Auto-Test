@@ -9,7 +9,16 @@ import time
 from pathlib import Path
 
 from fas_fallback import candidate_models, run_with_fallback
-from fas_git import changed_after, commit_if_changed, safe_push, status_porcelain
+from fas_git import (
+    PUSH_FAILED_CODE,
+    SCOPE_VIOLATION_CODE,
+    PushFailedError,
+    ScopeViolationError,
+    changed_after,
+    commit_if_changed,
+    safe_push,
+    status_porcelain,
+)
 from fas_runtime import init_repository, read_state, record_test, select_route, write_state
 from fas_watch import watch_and_recover
 from model_router import TaskSignals, available_models
@@ -110,16 +119,41 @@ def _run_task(args: argparse.Namespace) -> int:
             return test.returncode
 
     if os.environ.get("FAS_COMMIT") == "1":
-        commit_sha = commit_if_changed(
-            str(repo),
-            os.environ.get("FAS_COMMIT_MESSAGE", "chore: FAS autonomous change"),
-        )
+        allowed_paths = None
+        if args.recovery:
+            allowed_paths = tuple(
+                path.strip()
+                for path in os.environ.get("FAS_ALLOWED_PATHS", "").splitlines()
+                if path.strip()
+            )
+            if not allowed_paths:
+                state = read_state(repo)
+                state.setdefault("failure", {})["class"] = "scope_unknown"
+                write_state(repo, state)
+                return SCOPE_VIOLATION_CODE
+        try:
+            commit_sha = commit_if_changed(
+                str(repo),
+                os.environ.get("FAS_COMMIT_MESSAGE", "chore: FAS autonomous change"),
+                allowed_paths=allowed_paths,
+            )
+        except ScopeViolationError:
+            state = read_state(repo)
+            state.setdefault("failure", {})["class"] = "scope_violation"
+            write_state(repo, state)
+            return SCOPE_VIOLATION_CODE
         state = read_state(repo)
         state["git"]["commit_sha"] = commit_sha
         write_state(repo, state)
 
     if os.environ.get("FAS_PUSH") == "1":
-        safe_push(str(repo))
+        try:
+            safe_push(str(repo))
+        except PushFailedError:
+            state = read_state(repo)
+            state.setdefault("failure", {})["class"] = "push_failed"
+            write_state(repo, state)
+            return PUSH_FAILED_CODE
 
     return 0
 
