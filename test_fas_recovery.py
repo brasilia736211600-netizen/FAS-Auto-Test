@@ -3,6 +3,7 @@ import subprocess
 
 from fas_recovery import (
     build_repair_task,
+    diagnosed_scope,
     failed_logs,
     persist_failure_logs,
     recover_once,
@@ -38,8 +39,6 @@ def test_recovery_scope_resolves_unique_failed_test_path(tmp_path):
 
 
 def test_recovery_scope_finds_paths_printed_by_ci_commands(tmp_path):
-    workflow = tmp_path / ".github" / "workflows"
-    workflow.mkdir(parents=True)
     target = tmp_path / "apps" / "weblibre" / "profile.g.dart"
     target.parent.mkdir(parents=True)
     target.write_text("generated\n", encoding="utf-8")
@@ -54,6 +53,14 @@ def test_recovery_scope_rejects_ambiguous_path(tmp_path):
         (directory / "test_same.py").write_text("assert True\n", encoding="utf-8")
     logs = "FAILED test_same.py::test_case"
     assert recovery_scope(tmp_path, logs) == ()
+
+
+def test_diagnosed_scope_accepts_only_existing_repo_paths(tmp_path):
+    source = tmp_path / "src" / "broken.py"
+    source.parent.mkdir(parents=True)
+    source.write_text("raise RuntimeError\n", encoding="utf-8")
+    output = "src/broken.py\nmissing.py\n.git/config\n"
+    assert diagnosed_scope(tmp_path, output) == ("src/broken.py",)
 
 
 def test_workflow_file_resolves_failed_workflow_name(tmp_path):
@@ -80,6 +87,25 @@ def test_repair_task_points_agent_to_fresh_ci_evidence(tmp_path):
     assert "e2e/" in task
 
 
+def test_recover_once_uses_model_diagnosis_when_direct_scope_is_missing(tmp_path, monkeypatch):
+    monkeypatch.setattr("fas_recovery.ensure_fas_excluded", lambda repo: None)
+    monkeypatch.setattr("fas_recovery.failed_logs", lambda repository, run_id: "CI failure without a printed path")
+    monkeypatch.setattr("fas_recovery.workflow_file", lambda repository, run_id: None)
+    source = tmp_path / "src" / "broken.py"
+    source.parent.mkdir(parents=True)
+    source.write_text("broken\n", encoding="utf-8")
+    seen = []
+
+    result = recover_once(
+        str(tmp_path),
+        7,
+        diagnose_runner=lambda task: "src/broken.py\n",
+        repair_runner=lambda task: seen.append(task) or 0,
+    )
+    assert result == 0
+    assert seen and "src/broken.py" in seen[0]
+
+
 def test_recover_once_persists_logs_and_passes_scope_to_repair(tmp_path, monkeypatch):
     monkeypatch.setattr("fas_recovery.ensure_fas_excluded", lambda repo: None)
     monkeypatch.setattr(
@@ -99,7 +125,6 @@ def test_recover_once_persists_logs_and_passes_scope_to_repair(tmp_path, monkeyp
     assert recover_once(str(tmp_path), 7, repair_runner=repair_runner) == 0
     assert received and "e2e/" in received[0]
     assert (tmp_path / ".fas" / "logs" / "ci-failure.log").read_text(encoding="utf-8").startswith("FAILED")
-    assert monkeypatch is not None
 
 
 def test_recover_once_sets_dedicated_commit_message_and_restores_environment(tmp_path, monkeypatch):
@@ -124,10 +149,15 @@ def test_recover_once_sets_dedicated_commit_message_and_restores_environment(tmp
     assert os.environ["FAS_COMMIT_MESSAGE"] == "stale message"
 
 
-def test_recover_once_stops_when_scope_is_unknown(tmp_path, monkeypatch):
+def test_recover_once_stops_when_scope_is_unknown_and_diagnosis_is_empty(tmp_path, monkeypatch):
     monkeypatch.setattr("fas_recovery.ensure_fas_excluded", lambda repo: None)
     monkeypatch.setattr("fas_recovery.failed_logs", lambda repository, run_id: "no concrete path")
     monkeypatch.setattr("fas_recovery.workflow_file", lambda repository, run_id: None)
     called = []
-    assert recover_once(str(tmp_path), 7, repair_runner=lambda task: called.append(task) or 0) == 77
+    assert recover_once(
+        str(tmp_path),
+        7,
+        diagnose_runner=lambda task: "",
+        repair_runner=lambda task: called.append(task) or 0,
+    ) == 77
     assert called == []
