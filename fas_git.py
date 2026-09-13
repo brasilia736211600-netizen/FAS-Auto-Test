@@ -86,7 +86,7 @@ def changed_after(repo: str, before: str) -> bool:
 
 
 def ensure_fas_excluded(repo: str) -> None:
-    """Keep FAS operational state local without changing tracked project files."""
+    """Keep FAS and common Python runtime artifacts local without changing tracked files."""
     root = Path(repo).resolve()
     git_dir = subprocess.run(
         ["git", "-C", str(root), "rev-parse", "--git-dir"],
@@ -99,12 +99,13 @@ def ensure_fas_excluded(repo: str) -> None:
         git_path = root / git_path
     exclude = git_path / "info" / "exclude"
     exclude.parent.mkdir(parents=True, exist_ok=True)
-    marker = ".fas/"
+    markers = (".fas/", "__pycache__/", ".pytest_cache/", "*.pyc")
     existing = exclude.read_text(encoding="utf-8") if exclude.exists() else ""
     lines = {line.strip() for line in existing.splitlines() if line.strip()}
-    if marker not in lines:
+    missing = [marker for marker in markers if marker not in lines]
+    if missing:
         prefix = "" if not existing or existing.endswith("\n") else "\n"
-        exclude.write_text(existing + prefix + marker + "\n", encoding="utf-8")
+        exclude.write_text(existing + prefix + "\n".join(missing) + "\n", encoding="utf-8")
 
 
 def commit_if_changed(
