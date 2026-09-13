@@ -2,10 +2,11 @@
 from __future__ import annotations
 
 import argparse
+import time
 from pathlib import Path
 
-from fas_cli import _diagnose_scope, _watch
-from fas_watch import autopilot as run_autopilot
+from fas_cli import _watch
+from fas_watch import current_sha
 
 
 def run(repo: str | Path, *, max_attempts: int, poll_limit: int, poll_seconds: float, idle_seconds: float, max_cycles: int | None) -> int:
@@ -18,24 +19,20 @@ def run(repo: str | Path, *, max_attempts: int, poll_limit: int, poll_seconds: f
         test_cmd=None,
     )
 
-    def repair_runner(_task: str) -> int:
-        return _watch(args)
+    cycles = 0
+    while max_cycles is None or cycles < max_cycles:
+        result = _watch(args)
+        if result != 0:
+            return result
+        cycles += 1
+        if max_cycles is not None and cycles >= max_cycles:
+            return 0
 
-    def diagnose_runner(task: str) -> str:
-        return _diagnose_scope(root, task)
+        baseline = current_sha(root)
+        while current_sha(root) == baseline:
+            time.sleep(idle_seconds)
 
-    result = run_autopilot(
-        root,
-        max_attempts=max_attempts,
-        poll_limit=poll_limit,
-        poll_seconds=poll_seconds,
-        idle_seconds=idle_seconds,
-        max_cycles=max_cycles,
-        repair_runner=repair_runner,
-        diagnose_runner=diagnose_runner,
-    )
-    print(result)
-    return 0 if result == "success" else 1
+    return 0
 
 
 def main() -> int:
