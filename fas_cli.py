@@ -190,7 +190,7 @@ def _watch(args: argparse.Namespace) -> int:
         repair_runner=repair_runner,
     )
     print(result)
-    return 0
+    return 0 if result == "success" else 1
 
 
 def _route_decision(route: dict[str, str]):
