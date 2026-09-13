@@ -160,5 +160,5 @@ def test_watch_passes_diagnosis_runner_when_available(monkeypatch):
         repair_runner=lambda task: 0,
         diagnose_runner=diagnosis,
         runner=lambda *a, **k: None,
-    ) == "repair_failed"
+    ) == "scope_violation"
     assert captured["diagnose_runner"] is diagnosis
