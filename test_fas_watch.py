@@ -1,6 +1,7 @@
 import pytest
 
 from fas_github import WorkflowRun
+from fas_git import PUSH_FAILED_CODE, SCOPE_VIOLATION_CODE
 from fas_watch import RecoveryBudgetExceeded, watch_and_recover
 
 
@@ -38,6 +39,26 @@ def test_watch_stops_when_repair_fails(monkeypatch):
     )
     monkeypatch.setattr("fas_watch.recover_once", lambda *args, **kwargs: 1)
     assert watch_and_recover("owner/repo", repair_runner=lambda task: 1, runner=lambda *a, **k: None) == "repair_failed"
+
+
+def test_watch_stops_on_scope_violation(monkeypatch):
+    monkeypatch.setattr("fas_watch.current_sha", lambda repository, runner=None: "abc")
+    monkeypatch.setattr(
+        "fas_watch.find_run",
+        lambda repository, sha, runner=None: WorkflowRun(7, "completed", "failure", sha, "FAS CI"),
+    )
+    monkeypatch.setattr("fas_watch.recover_once", lambda *args, **kwargs: SCOPE_VIOLATION_CODE)
+    assert watch_and_recover("owner/repo", repair_runner=lambda task: 77, runner=lambda *a, **k: None) == "scope_violation"
+
+
+def test_watch_stops_on_push_failure(monkeypatch):
+    monkeypatch.setattr("fas_watch.current_sha", lambda repository, runner=None: "abc")
+    monkeypatch.setattr(
+        "fas_watch.find_run",
+        lambda repository, sha, runner=None: WorkflowRun(7, "completed", "failure", sha, "FAS CI"),
+    )
+    monkeypatch.setattr("fas_watch.recover_once", lambda *args, **kwargs: PUSH_FAILED_CODE)
+    assert watch_and_recover("owner/repo", repair_runner=lambda task: 78, runner=lambda *a, **k: None) == "push_failed"
 
 
 def test_watch_rejects_repair_without_new_commit(monkeypatch):
