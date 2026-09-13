@@ -9,6 +9,7 @@ from fas_git import (
     assert_clean,
     changed_after,
     commit_if_changed,
+    ensure_fas_excluded,
     safe_push,
     status_porcelain,
 )
@@ -141,3 +142,23 @@ def test_commit_if_changed_stages_only_declared_scope(monkeypatch):
     assert commit_if_changed(".", "fix: live fixture", allowed_paths=("e2e/",)) == "abc123"
     assert calls[3][-3:] == ["-A", "--", "e2e/"]
     assert calls[4][3:5] == ["commit", "-m"]
+
+
+def test_ensure_fas_excluded_adds_common_python_runtime_artifacts(tmp_path):
+    repo = tmp_path / "repo"
+    git_dir = repo / ".git"
+    (git_dir / "info").mkdir(parents=True)
+
+    def fake_run(command, **kwargs):
+        return subprocess.CompletedProcess(command, 0, ".git\n", "")
+
+    original = subprocess.run
+    subprocess.run = fake_run
+    try:
+        ensure_fas_excluded(repo)
+    finally:
+        subprocess.run = original
+
+    exclude = (git_dir / "info" / "exclude").read_text(encoding="utf-8")
+    for marker in (".fas/", "__pycache__/", ".pytest_cache/", "*.pyc"):
+        assert marker in exclude
