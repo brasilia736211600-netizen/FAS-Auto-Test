@@ -40,10 +40,17 @@ def test_cli_run_bootstraps_state_and_uses_router_model(monkeypatch, tmp_path):
 
     def fake_run(command, **kwargs):
         calls.append((command, kwargs))
-        return subprocess.CompletedProcess(command, 0)
+        stdout = ""
+        if "branch" in command and "--show-current" in command:
+            stdout = "main\n"
+        if command and command[-1] == "HEAD":
+            stdout = "abc123\n"
+        return subprocess.CompletedProcess(command, 0, stdout=stdout)
 
     monkeypatch.setattr(fas_cli.subprocess, "run", fake_run)
     monkeypatch.setattr(fas_cli, "record_test", lambda *args: Path(tmp_path / "recorded.json"))
+    monkeypatch.delenv("FAS_PUSH", raising=False)
+    monkeypatch.delenv("FAS_COMMIT", raising=False)
 
     assert fas_cli.main(["run", "do work", "--repo", str(repo)]) == 0
     command = calls[0][0]
@@ -83,8 +90,18 @@ def test_cli_model_override_is_effective_but_router_choice_remains_planned(monke
         "write_state",
         lambda _repo, value: persisted.append(value) or Path(tmp_path / "state.json"),
     )
-    monkeypatch.setattr(fas_cli.subprocess, "run", lambda command, **kwargs: subprocess.CompletedProcess(command, 0))
+    def fake_run(command, **kwargs):
+        stdout = ""
+        if "branch" in command and "--show-current" in command:
+            stdout = "main\n"
+        if command and command[-1] == "HEAD":
+            stdout = "abc123\n"
+        return subprocess.CompletedProcess(command, 0, stdout=stdout)
+
+    monkeypatch.setattr(fas_cli.subprocess, "run", fake_run)
     monkeypatch.setattr(fas_cli, "record_test", lambda *args: None)
+    monkeypatch.delenv("FAS_PUSH", raising=False)
+    monkeypatch.delenv("FAS_COMMIT", raising=False)
     monkeypatch.setenv("FAS_MODEL", "override/model")
 
     assert fas_cli.main(["run", "do work", "--repo", str(repo)]) == 0
