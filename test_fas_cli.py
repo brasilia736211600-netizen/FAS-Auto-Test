@@ -25,6 +25,7 @@ def test_cli_run_bootstraps_state_and_uses_router_model(monkeypatch, tmp_path):
         "max_attempts": 3,
         "route": None,
         "test": {},
+        "git": {"branch": None, "commit_sha": None},
     }
 
     monkeypatch.setattr(fas_cli, "read_state", lambda _: state.copy())
@@ -65,6 +66,7 @@ def test_cli_model_override_is_effective_but_router_choice_remains_planned(monke
         "max_attempts": 3,
         "route": None,
         "test": {},
+        "git": {"branch": None, "commit_sha": None},
     }
     persisted = []
 
