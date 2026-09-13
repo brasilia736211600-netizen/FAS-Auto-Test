@@ -87,8 +87,6 @@ def test_commit_if_changed_uses_normal_commit(monkeypatch):
     calls = []
     responses = iter([
         subprocess.CompletedProcess(["git"], 0, " M file.py\n", ""),
-        subprocess.CompletedProcess(["git"], 0, "file.py\n", ""),
-        subprocess.CompletedProcess(["git"], 0, "", ""),
         subprocess.CompletedProcess(["git"], 0, "", ""),
         subprocess.CompletedProcess(["git"], 0, "", ""),
         subprocess.CompletedProcess(["git"], 0, "abc123\n", ""),
@@ -100,10 +98,9 @@ def test_commit_if_changed_uses_normal_commit(monkeypatch):
 
     monkeypatch.setattr(subprocess, "run", fake_run)
     assert commit_if_changed(".", "feat: test") == "abc123"
-    assert calls[1] == ["git", "-C", ".", "diff", "--name-only", "HEAD", "--"]
-    assert calls[3][3:5] == ["add", "-A"]
-    assert calls[4][3:5] == ["commit", "-m"]
-    assert "--force" not in calls[4]
+    assert calls[1][3:5] == ["add", "-A"]
+    assert calls[2][3:5] == ["commit", "-m"]
+    assert "--force" not in calls[2]
 
 
 def test_commit_if_changed_rejects_out_of_scope_changes(monkeypatch):
