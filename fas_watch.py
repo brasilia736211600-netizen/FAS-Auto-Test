@@ -1,4 +1,4 @@
-"""Bounded CI watch-and-recovery loop for FAS."""
+"""CI watch, bounded recovery, and continuous autonomous supervision for FAS."""
 from __future__ import annotations
 
 import subprocess
@@ -32,6 +32,7 @@ def watch_and_recover(
     poll_seconds: float = 5.0,
     runner=subprocess.run,
     repair_runner: Callable[[str], int],
+    diagnose_runner: Callable[[str], str] | None = None,
 ) -> str:
     """Watch CI and perform bounded recovery until PASS or a stop condition."""
     if max_attempts < 1:
@@ -63,7 +64,12 @@ def watch_and_recover(
         if attempts > max_attempts:
             raise RecoveryBudgetExceeded("CI recovery attempt budget exhausted")
 
-        repair_result = recover_once(repository, run.database_id, repair_runner=repair_runner)
+        repair_result = recover_once(
+            repository,
+            run.database_id,
+            repair_runner=repair_runner,
+            diagnose_runner=diagnose_runner,
+        )
         if repair_result == SCOPE_VIOLATION_CODE:
             return "scope_violation"
         if repair_result == PUSH_FAILED_CODE:
@@ -79,3 +85,70 @@ def watch_and_recover(
         sha = new_sha
 
     return "poll_limit_exhausted"
+
+
+def wait_for_new_sha(
+    repository: str,
+    previous_sha: str,
+    *,
+    poll_seconds: float = 5.0,
+    runner=subprocess.run,
+    poll_limit: int | None = None,
+) -> str | None:
+    """Wait until the local checkout advances to a new commit."""
+    polls = 0
+    while poll_limit is None or polls < poll_limit:
+        polls += 1
+        sha = current_sha(repository, runner=runner)
+        if sha != previous_sha:
+            return sha
+        time.sleep(poll_seconds)
+    return None
+
+
+def autopilot(
+    repository: str,
+    *,
+    max_attempts: int = 3,
+    poll_limit: int = 60,
+    poll_seconds: float = 5.0,
+    idle_seconds: float = 10.0,
+    max_cycles: int | None = None,
+    runner=subprocess.run,
+    repair_runner: Callable[[str], int],
+    diagnose_runner: Callable[[str], str] | None = None,
+) -> str:
+    """Continuously supervise HEAD, recover failures, then wait for the next commit."""
+    if idle_seconds < 0:
+        raise ValueError("idle_seconds must not be negative")
+    if max_cycles is not None and max_cycles < 1:
+        raise ValueError("max_cycles must be positive when provided")
+
+    cycles = 0
+    while max_cycles is None or cycles < max_cycles:
+        result = watch_and_recover(
+            repository,
+            max_attempts=max_attempts,
+            poll_limit=poll_limit,
+            poll_seconds=poll_seconds,
+            runner=runner,
+            repair_runner=repair_runner,
+            diagnose_runner=diagnose_runner,
+        )
+        cycles += 1
+        if result != "success":
+            return result
+        if max_cycles is not None and cycles >= max_cycles:
+            return "success"
+
+        baseline = current_sha(repository, runner=runner)
+        next_sha = wait_for_new_sha(
+            repository,
+            baseline,
+            poll_seconds=idle_seconds,
+            runner=runner,
+        )
+        if next_sha is None:
+            return "idle_limit_exhausted"
+
+    return "success"
