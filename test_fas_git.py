@@ -57,6 +57,23 @@ def test_safe_push_never_uses_force(monkeypatch):
     assert push[-2:] == ["origin", "main"]
 
 
+def test_safe_push_rejects_detached_head_without_push(monkeypatch):
+    calls = []
+
+    def fake_run(command, **kwargs):
+        calls.append(command)
+        if command[:4] == ["git", "-C", ".", "status"]:
+            return subprocess.CompletedProcess(command, 0, "", "")
+        if command[-2:] == ["branch", "--show-current"]:
+            return subprocess.CompletedProcess(command, 0, "\n", "")
+        raise AssertionError("push must not run from detached HEAD")
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    with pytest.raises(RuntimeError, match="detached HEAD"):
+        safe_push(".")
+    assert not any(call[-2:] == ["origin", ""] for call in calls)
+
+
 def test_safe_push_classifies_push_failure(monkeypatch):
     def fake_run(command, **kwargs):
         if command[:4] == ["git", "-C", ".", "status"]:
