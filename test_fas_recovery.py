@@ -1,3 +1,4 @@
+import os
 import subprocess
 
 from fas_recovery import (
@@ -74,6 +75,27 @@ def test_recover_once_persists_logs_and_passes_scope_to_repair(tmp_path, monkeyp
     assert received and "e2e/" in received[0]
     assert (tmp_path / ".fas" / "logs" / "ci-failure.log").read_text(encoding="utf-8").startswith("FAILED")
     assert monkeypatch is not None
+
+
+def test_recover_once_sets_dedicated_commit_message_and_restores_environment(tmp_path, monkeypatch):
+    monkeypatch.setattr("fas_recovery.ensure_fas_excluded", lambda repo: None)
+    monkeypatch.setattr(
+        "fas_recovery.failed_logs",
+        lambda repository, run_id: "FAILED test_live_fixture.py::test_addition",
+    )
+    e2e = tmp_path / "e2e"
+    e2e.mkdir()
+    (e2e / "test_live_fixture.py").write_text("assert True\n", encoding="utf-8")
+    monkeypatch.setenv("FAS_COMMIT_MESSAGE", "stale message")
+    seen = []
+
+    def repair_runner(task):
+        seen.append(os.environ.get("FAS_COMMIT_MESSAGE"))
+        return 0
+
+    assert recover_once(str(tmp_path), 7, repair_runner=repair_runner) == 0
+    assert seen == ["fix: autonomous CI recovery"]
+    assert os.environ["FAS_COMMIT_MESSAGE"] == "stale message"
 
 
 def test_recover_once_stops_when_scope_is_unknown(tmp_path, monkeypatch):
