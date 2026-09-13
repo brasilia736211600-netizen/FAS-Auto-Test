@@ -42,16 +42,7 @@ def workflow_file(
     try:
         repo_name = resolve_repository(str(root), runner=runner)
         result = runner(
-            [
-                "gh",
-                "run",
-                "view",
-                str(run_id),
-                "--repo",
-                repo_name,
-                "--json",
-                "workflowName",
-            ],
+            ["gh", "run", "view", str(run_id), "--repo", repo_name, "--json", "workflowName"],
             check=True,
             capture_output=True,
             text=True,
@@ -85,7 +76,7 @@ def persist_failure_logs(repo: str | Path, logs: str) -> Path:
 
 
 def _resolve_evidence_path(repo: Path, raw_path: str) -> Path | None:
-    candidate = Path(raw_path)
+    candidate = Path(raw_path.strip().strip("`'\""))
     if candidate.is_absolute():
         try:
             candidate.relative_to(repo)
@@ -93,7 +84,7 @@ def _resolve_evidence_path(repo: Path, raw_path: str) -> Path | None:
             return None
         return candidate
     direct = repo / candidate
-    if direct.is_file():
+    if direct.exists() and ".git" not in direct.parts and ".fas" not in direct.parts:
         return direct
     matches = [
         path
@@ -123,6 +114,36 @@ def recovery_scope(repo: str | Path, logs: str) -> tuple[str, ...]:
     return tuple(unique)
 
 
+def build_scope_diagnosis_task(log_path: str | Path) -> str:
+    return (
+        "Diagnose the recorded CI failure without changing any repository files. "
+        "Read {log}, inspect the current repository, and identify the smallest set "
+        "of repository-relative files or directories directly implicated by the failure. "
+        "Output ONLY one path per line, with no prose, markdown, or code fences. "
+        "Every path must exist in the repository. Do not include .git or .fas paths."
+    ).format(log=Path(log_path))
+
+
+def diagnosed_scope(repo: str | Path, output: str) -> tuple[str, ...]:
+    """Validate model-proposed recovery scope before permitting mutation."""
+    root = Path(repo).expanduser().resolve()
+    scopes = []
+    seen = set()
+    for line in output.splitlines():
+        raw = line.strip()
+        if not raw or raw.startswith("#"):
+            continue
+        path = _resolve_evidence_path(root, raw)
+        if path is None:
+            continue
+        relative = path.relative_to(root).as_posix()
+        scope = relative if path.is_file() or path.parent == root else f"{relative.rstrip('/')}/"
+        if scope not in seen:
+            scopes.append(scope)
+            seen.add(scope)
+    return tuple(scopes)
+
+
 def build_repair_task(log_path: str | Path, allowed_paths: tuple[str, ...] = ()) -> str:
     path = Path(log_path)
     scope_text = ", ".join(allowed_paths) if allowed_paths else "UNKNOWN"
@@ -144,6 +165,7 @@ def recover_once(
     run_id: int,
     *,
     repair_runner,
+    diagnose_runner=None,
 ) -> int:
     """Persist CI evidence and delegate one bounded repair attempt."""
     logs = failed_logs(repository, run_id)
@@ -152,6 +174,9 @@ def recover_once(
     workflow = workflow_file(repository, run_id)
     if workflow and workflow not in allowed_paths:
         allowed_paths.append(workflow)
+    if not allowed_paths and diagnose_runner is not None:
+        diagnosis = diagnose_runner(build_scope_diagnosis_task(log_path))
+        allowed_paths.extend(diagnosed_scope(repository, diagnosis))
     if not allowed_paths:
         return 77
     scope = tuple(allowed_paths)
