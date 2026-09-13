@@ -1,33 +1,46 @@
 # FAS Live E2E Recovery
 
-This branch is an isolated disposable fixture for proving the real autonomous CI recovery loop.
+This document records the completed disposable end-to-end proof of the autonomous FAS CI-recovery loop.
 
-The fixture intentionally contains a broken `add()` implementation in `e2e/live_fixture.py`. The workflow `.github/workflows/fas-e2e-live.yml` runs the focused fixture test.
+The disposable fixture is under `e2e/`. During the live proof, `e2e/live_fixture.py` intentionally returned subtraction instead of addition. FAS detected the GitHub Actions failure, persisted the failure evidence, constrained recovery to `e2e/`, delegated the repair to OpenCode, ran the focused E2E test, committed only the allowed change, pushed without force, and observed a successful GitHub Actions run.
 
 ## Termux procedure
 
-Clone/check out this branch and ensure `gh` authentication and OpenCode are already configured in Termux.
+Clone/check out the recovery branch and ensure `gh` authentication and OpenCode are configured in Termux.
+
+Initialize FAS once:
 
 ```bash
-fas init .
-fas watch --repo . --test-cmd 'python -m pytest -q' --max-attempts 3 --poll-limit 60 --poll-seconds 5
+python fas_cli.py init .
 ```
 
-Expected autonomous sequence:
+For this disposable recovery fixture, use the same focused test command as the workflow:
+
+```bash
+python fas_cli.py watch --repo . --test-cmd 'python -m pytest -q e2e/' --max-attempts 3 --poll-limit 60 --poll-seconds 5
+```
+
+The focused command is intentional. Using the full repository suite during recovery can block an otherwise correct fixture repair on unrelated failures.
+
+## Proven sequence
 
 ```text
-existing broken commit
+broken commit
  -> GitHub Actions FAIL
- -> fas watch identifies the failed run
+ -> FAS Watch identifies the failed run
  -> failure log saved under .fas/logs/
- -> OpenCode receives a recovery task
+ -> recovery scope resolved to e2e/
+ -> OpenCode receives a bounded recovery task
  -> smallest fix is made
- -> focused tests pass
- -> FAS commits
+ -> focused E2E test passes
+ -> FAS commits only allowed paths
  -> FAS pushes without force
- -> HEAD changes
- -> fas watch observes the new CI run
+ -> GitHub Actions runs on the new SHA
  -> CI PASS
 ```
 
-The disposable branch may be deleted after successful verification. Do not use the fixture as the production target.
+## Verified result
+
+The live recovery produced commit `8727a27` with only the intended fixture file changed, and the subsequent `FAS E2E Live` workflow passed. The later CLI fixture-contract fix was committed as `fe14bc8`; the full FAS CI then passed with `74 passed`.
+
+This branch/fixture is disposable proof infrastructure, not a production target. Keep the recovery mechanism; do not couple production projects to the fixture itself.
