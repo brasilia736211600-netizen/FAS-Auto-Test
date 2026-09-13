@@ -8,7 +8,7 @@ BIN_DIR="${FAS_BIN_DIR:-$HOME/.local/bin}"
 mkdir -p "$FAS_HOME" "$BIN_DIR"
 cp "$SOURCE_DIR/model_router.py" "$SOURCE_DIR/fas_runtime.py" "$SOURCE_DIR/fas_fallback.py" \
    "$SOURCE_DIR/fas_git.py" "$SOURCE_DIR/fas_ci.py" "$SOURCE_DIR/fas_github.py" \
-   "$SOURCE_DIR/fas_orchestrator.py" "$SOURCE_DIR/fas_watch.py" "$SOURCE_DIR/fas_cli.py" \
+   "$SOURCE_DIR/fas_recovery.py" "$SOURCE_DIR/fas_orchestrator.py" "$SOURCE_DIR/fas_watch.py" "$SOURCE_DIR/fas_cli.py" \
    "$SOURCE_DIR/fas_resume.py" "$SOURCE_DIR/fas_autopilot.py" "$FAS_HOME/"
 
 cat > "$BIN_DIR/fas-resume" <<'EOF'
