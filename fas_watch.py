@@ -6,6 +6,7 @@ import time
 from typing import Callable
 
 from fas_github import classify_run, find_run
+from fas_git import PUSH_FAILED_CODE, SCOPE_VIOLATION_CODE
 from fas_recovery import recover_once
 
 
@@ -62,7 +63,12 @@ def watch_and_recover(
         if attempts > max_attempts:
             raise RecoveryBudgetExceeded("CI recovery attempt budget exhausted")
 
-        if recover_once(repository, run.database_id, repair_runner=repair_runner) != 0:
+        repair_result = recover_once(repository, run.database_id, repair_runner=repair_runner)
+        if repair_result == SCOPE_VIOLATION_CODE:
+            return "scope_violation"
+        if repair_result == PUSH_FAILED_CODE:
+            return "push_failed"
+        if repair_result != 0:
             return "repair_failed"
 
         # A successful repair must produce a new commit/push before we watch
