@@ -1,6 +1,7 @@
 """Resume a durable FAS task from repository state."""
 from __future__ import annotations
 
+import argparse
 import subprocess
 from pathlib import Path
 
@@ -37,10 +38,13 @@ def resume(repo: str | Path, task_file: str) -> int:
     return completed.returncode
 
 
-if __name__ == "__main__":
-    import argparse
-
+def main() -> int:
     parser = argparse.ArgumentParser(prog="fas-resume")
     parser.add_argument("repo", nargs="?", default=".")
     parser.add_argument("task_file", nargs="?", default="docs/FAS_WEBLIBRE_NEXT_BUILD.md")
-    raise SystemExit(resume(parser.parse_args().repo, parser.parse_args().task_file))
+    args = parser.parse_args()
+    return resume(args.repo, args.task_file)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
