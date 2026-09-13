@@ -64,12 +64,10 @@ def watch_and_recover(
         if attempts > max_attempts:
             raise RecoveryBudgetExceeded("CI recovery attempt budget exhausted")
 
-        repair_result = recover_once(
-            repository,
-            run.database_id,
-            repair_runner=repair_runner,
-            diagnose_runner=diagnose_runner,
-        )
+        recovery_kwargs = {"repair_runner": repair_runner}
+        if diagnose_runner is not None:
+            recovery_kwargs["diagnose_runner"] = diagnose_runner
+        repair_result = recover_once(repository, run.database_id, **recovery_kwargs)
         if repair_result == SCOPE_VIOLATION_CODE:
             return "scope_violation"
         if repair_result == PUSH_FAILED_CODE:
