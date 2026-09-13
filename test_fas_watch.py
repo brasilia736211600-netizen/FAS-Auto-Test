@@ -139,3 +139,26 @@ def test_watch_allows_up_to_three_recovery_attempts(monkeypatch):
     monkeypatch.setattr("fas_watch.find_run", lambda repository, sha, runner=None: next(runs))
     with pytest.raises(RecoveryBudgetExceeded):
         watch_and_recover("owner/repo", max_attempts=3, repair_runner=lambda task: 0, runner=lambda *a, **k: None)
+
+
+def test_watch_passes_diagnosis_runner_when_available(monkeypatch):
+    monkeypatch.setattr("fas_watch.current_sha", lambda repository, runner=None: "abc")
+    monkeypatch.setattr(
+        "fas_watch.find_run",
+        lambda repository, sha, runner=None: WorkflowRun(7, "completed", "failure", sha, "FAS CI"),
+    )
+    captured = {}
+
+    def recovery_bridge(repository, run_id, **kwargs):
+        captured.update(kwargs)
+        return 77
+
+    monkeypatch.setattr("fas_watch.recover_once", recovery_bridge)
+    diagnosis = lambda task: "src/broken.py\n"
+    assert watch_and_recover(
+        "owner/repo",
+        repair_runner=lambda task: 0,
+        diagnose_runner=diagnosis,
+        runner=lambda *a, **k: None,
+    ) == "repair_failed"
+    assert captured["diagnose_runner"] is diagnosis
