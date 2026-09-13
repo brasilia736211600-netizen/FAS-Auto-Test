@@ -1,7 +1,9 @@
 import json
 import subprocess
 
-from fas_github import WorkflowRun, classify_run, find_run, view_run
+import pytest
+
+from fas_github import WorkflowRun, classify_run, find_run, resolve_repository, view_run
 
 
 def _runner_with(payload):
@@ -9,6 +11,54 @@ def _runner_with(payload):
         return subprocess.CompletedProcess(command, 0, json.dumps(payload), "")
 
     return runner
+
+
+def test_resolve_repository_preserves_owner_repo():
+    assert resolve_repository("owner/repo") == "owner/repo"
+
+
+def test_resolve_repository_from_https_origin(tmp_path):
+    commands = []
+
+    def runner(command, **kwargs):
+        commands.append(command)
+        return subprocess.CompletedProcess(
+            command,
+            0,
+            "https://github.com/brasilia736211600-netizen/FAS-Auto-Test.git\n",
+            "",
+        )
+
+    assert resolve_repository(str(tmp_path), runner=runner) == (
+        "brasilia736211600-netizen/FAS-Auto-Test"
+    )
+    assert commands == [
+        ["git", "-C", str(tmp_path.resolve()), "remote", "get-url", "origin"]
+    ]
+
+
+def test_resolve_repository_from_ssh_origin(tmp_path):
+    def runner(command, **kwargs):
+        return subprocess.CompletedProcess(
+            command,
+            0,
+            "git@github.com:brasilia736211600-netizen/FAS-Auto-Test.git\n",
+            "",
+        )
+
+    assert resolve_repository(str(tmp_path), runner=runner) == (
+        "brasilia736211600-netizen/FAS-Auto-Test"
+    )
+
+
+def test_resolve_repository_rejects_non_github_origin(tmp_path):
+    def runner(command, **kwargs):
+        return subprocess.CompletedProcess(
+            command, 0, "https://gitlab.com/example/repo.git\n", ""
+        )
+
+    with pytest.raises(ValueError, match="not a GitHub repository"):
+        resolve_repository(str(tmp_path), runner=runner)
 
 
 def test_find_run_matches_commit_sha():
