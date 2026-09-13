@@ -39,23 +39,26 @@ def workflow_file(
 ) -> str | None:
     """Resolve the failed run's workflow definition to a local workflow file."""
     root = Path(repository).expanduser().resolve()
-    repo_name = resolve_repository(str(root), runner=runner)
-    result = runner(
-        [
-            "gh",
-            "run",
-            "view",
-            str(run_id),
-            "--repo",
-            repo_name,
-            "--json",
-            "workflowName",
-        ],
-        check=True,
-        capture_output=True,
-        text=True,
-    )
-    workflow_name = str(json.loads(result.stdout).get("workflowName", "")).strip()
+    try:
+        repo_name = resolve_repository(str(root), runner=runner)
+        result = runner(
+            [
+                "gh",
+                "run",
+                "view",
+                str(run_id),
+                "--repo",
+                repo_name,
+                "--json",
+                "workflowName",
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        workflow_name = str(json.loads(result.stdout).get("workflowName", "")).strip()
+    except (subprocess.CalledProcessError, ValueError, json.JSONDecodeError):
+        return None
     if not workflow_name:
         return None
     candidates = []
