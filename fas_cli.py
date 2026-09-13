@@ -19,6 +19,7 @@ from fas_git import (
     safe_push,
     status_porcelain,
 )
+from fas_recovery import build_scope_diagnosis_task
 from fas_runtime import init_repository, read_state, record_test, select_route, write_state
 from fas_watch import watch_and_recover
 from model_router import TaskSignals, available_models
@@ -158,6 +159,28 @@ def _run_task(args: argparse.Namespace) -> int:
     return 0
 
 
+def _diagnose_scope(repo: str, task: str) -> str:
+    """Run a read-only recovery diagnosis with bounded model fallback."""
+    signals = TaskSignals(recovery=True, exploration=True)
+    decision = _route_decision(select_route(Path(repo), signals))
+    candidates = candidate_models(decision, available_models()[decision.capability.value])
+    baseline = status_porcelain(repo)
+    max_attempts = read_state(repo).get("max_attempts", 3)
+    for model in candidates[:max_attempts]:
+        result = subprocess.run(
+            ["opencode", "run", "--auto", "--model", model, "--agent", "explore", task],
+            cwd=repo,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if status_porcelain(repo) != baseline:
+            return ""
+        if result.returncode == 0 and result.stdout.strip():
+            return result.stdout
+    return ""
+
+
 def _watch(args: argparse.Namespace) -> int:
     repo = str(Path(args.repo).expanduser().resolve())
     test_cmd = args.test_cmd or os.environ.get("FAS_TEST_CMD")
@@ -182,12 +205,16 @@ def _watch(args: argparse.Namespace) -> int:
             else:
                 os.environ["FAS_PUSH"] = old_push
 
+    def diagnose_runner(task: str) -> str:
+        return _diagnose_scope(repo, task)
+
     result = watch_and_recover(
         repo,
         max_attempts=args.max_attempts,
         poll_limit=args.poll_limit,
         poll_seconds=args.poll_seconds,
         repair_runner=repair_runner,
+        diagnose_runner=diagnose_runner,
     )
     print(result)
     return 0 if result == "success" else 1
