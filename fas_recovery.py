@@ -104,11 +104,17 @@ def recover_once(
     if not allowed_paths:
         return 77
     old_scope = os.environ.get("FAS_ALLOWED_PATHS")
+    old_message = os.environ.get("FAS_COMMIT_MESSAGE")
     try:
         os.environ["FAS_ALLOWED_PATHS"] = "\n".join(allowed_paths)
+        os.environ["FAS_COMMIT_MESSAGE"] = "fix: autonomous CI recovery"
         return repair_runner(build_repair_task(log_path, allowed_paths))
     finally:
         if old_scope is None:
             os.environ.pop("FAS_ALLOWED_PATHS", None)
         else:
             os.environ["FAS_ALLOWED_PATHS"] = old_scope
+        if old_message is None:
+            os.environ.pop("FAS_COMMIT_MESSAGE", None)
+        else:
+            os.environ["FAS_COMMIT_MESSAGE"] = old_message
