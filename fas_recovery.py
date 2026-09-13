@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Sequence
 
 from fas_git import ensure_fas_excluded
+from fas_github import resolve_repository
 
 
 def failed_logs(
@@ -14,6 +15,7 @@ def failed_logs(
     *,
     runner=subprocess.run,
 ) -> str:
+    repository = resolve_repository(repository, runner=runner)
     result = runner(
         ["gh", "run", "view", str(run_id), "--repo", repository, "--log-failed"],
         check=True,
