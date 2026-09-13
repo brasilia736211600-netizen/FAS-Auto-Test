@@ -2,5 +2,4 @@
 
 
 def add(a: int, b: int) -> int:
-    # Intentional defect: the live recovery agent must identify and fix this.
-    return a - b
+    return a + b
