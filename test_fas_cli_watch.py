@@ -28,3 +28,9 @@ def test_cli_watch_delegates_to_bounded_watch(monkeypatch, tmp_path, capsys):
     assert captured["poll_limit"] == 4
     assert captured["poll_seconds"] == 0.1
     assert capsys.readouterr().out.strip() == "success"
+
+
+def test_cli_watch_returns_nonzero_for_terminal_failure(monkeypatch, tmp_path, capsys):
+    monkeypatch.setattr(fas_cli, "watch_and_recover", lambda repo, **kwargs: "scope_violation")
+    assert fas_cli.main(["watch", "--repo", str(tmp_path)]) == 1
+    assert capsys.readouterr().out.strip() == "scope_violation"
