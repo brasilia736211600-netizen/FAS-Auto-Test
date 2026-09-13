@@ -1,6 +1,7 @@
 """Autonomous GitHub CI recovery bridge for FAS."""
 from __future__ import annotations
 
+import json
 import os
 import re
 import subprocess
@@ -11,6 +12,7 @@ from fas_github import resolve_repository
 
 _FAILED_PATH = re.compile(r"\bFAILED\s+([^\s:]+)(?:::|$)")
 _TRACE_PATH = re.compile(r'\bFile "([^"]+)"')
+_EXISTING_PATH = re.compile(r"(?<![\w./-])([A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)*\.[A-Za-z0-9_.-]+)")
 
 
 def failed_logs(
@@ -27,6 +29,47 @@ def failed_logs(
         text=True,
     )
     return result.stdout
+
+
+def workflow_file(
+    repository: str | Path,
+    run_id: int,
+    *,
+    runner=subprocess.run,
+) -> str | None:
+    """Resolve the failed run's workflow definition to a local workflow file."""
+    root = Path(repository).expanduser().resolve()
+    repo_name = resolve_repository(str(root), runner=runner)
+    result = runner(
+        [
+            "gh",
+            "run",
+            "view",
+            str(run_id),
+            "--repo",
+            repo_name,
+            "--json",
+            "workflowName",
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    workflow_name = str(json.loads(result.stdout).get("workflowName", "")).strip()
+    if not workflow_name:
+        return None
+    candidates = []
+    for path in (root / ".github" / "workflows").glob("*.y*ml"):
+        text = path.read_text(encoding="utf-8", errors="replace")
+        for line in text.splitlines():
+            if line.strip().startswith("name:"):
+                name = line.split(":", 1)[1].strip().strip("'\"")
+                if name == workflow_name:
+                    candidates.append(path)
+                    break
+    if len(candidates) != 1:
+        return None
+    return candidates[0].relative_to(root).as_posix()
 
 
 def persist_failure_logs(repo: str | Path, logs: str) -> Path:
@@ -60,7 +103,7 @@ def _resolve_evidence_path(repo: Path, raw_path: str) -> Path | None:
 def recovery_scope(repo: str | Path, logs: str) -> tuple[str, ...]:
     """Infer a conservative file/directory scope from concrete CI paths."""
     root = Path(repo).expanduser().resolve()
-    raw_paths = _FAILED_PATH.findall(logs) + _TRACE_PATH.findall(logs)
+    raw_paths = _FAILED_PATH.findall(logs) + _TRACE_PATH.findall(logs) + _EXISTING_PATH.findall(logs)
     resolved = []
     for raw in raw_paths:
         path = _resolve_evidence_path(root, raw)
@@ -85,7 +128,9 @@ def build_repair_task(log_path: str | Path, allowed_paths: tuple[str, ...] = ())
         "Read the CI log at {log}. Identify the root cause from fresh evidence, "
         "make the smallest YAGNI-compliant fix, preserve existing behavior and "
         "tests, and run the repository test command before finishing. The declared "
-        "recovery scope is: {scope}. Do not modify files outside that scope unless "
+        "recovery scope is: {scope}. If the failure is in CI orchestration/configuration, "
+        "the workflow file in scope is eligible; otherwise prefer the concrete source/test "
+        "path from the failure evidence. Do not modify files outside that scope unless "
         "the scope is explicitly expanded by the controller. Do not reset, clean, "
         "force-push, delete unrelated work, or modify secrets."
     ).format(log=path, scope=scope_text)
@@ -100,15 +145,19 @@ def recover_once(
     """Persist CI evidence and delegate one bounded repair attempt."""
     logs = failed_logs(repository, run_id)
     log_path = persist_failure_logs(repository, logs)
-    allowed_paths = recovery_scope(repository, logs)
+    allowed_paths = list(recovery_scope(repository, logs))
+    workflow = workflow_file(repository, run_id)
+    if workflow and workflow not in allowed_paths:
+        allowed_paths.append(workflow)
     if not allowed_paths:
         return 77
+    scope = tuple(allowed_paths)
     old_scope = os.environ.get("FAS_ALLOWED_PATHS")
     old_message = os.environ.get("FAS_COMMIT_MESSAGE")
     try:
-        os.environ["FAS_ALLOWED_PATHS"] = "\n".join(allowed_paths)
+        os.environ["FAS_ALLOWED_PATHS"] = "\n".join(scope)
         os.environ["FAS_COMMIT_MESSAGE"] = "fix: autonomous CI recovery"
-        return repair_runner(build_repair_task(log_path, allowed_paths))
+        return repair_runner(build_repair_task(log_path, scope))
     finally:
         if old_scope is None:
             os.environ.pop("FAS_ALLOWED_PATHS", None)
