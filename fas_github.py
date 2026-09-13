@@ -2,9 +2,12 @@
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Sequence
+from urllib.parse import urlparse
 
 
 @dataclass(frozen=True)
@@ -25,6 +28,43 @@ def _run_json(
     return json.loads(completed.stdout)
 
 
+def resolve_repository(
+    repository: str,
+    *,
+    runner=subprocess.run,
+) -> str:
+    """Return an OWNER/REPO GitHub identity for a local path or explicit repo."""
+    candidate = Path(repository).expanduser()
+    if not candidate.exists() and re.fullmatch(r"[^/\\s]+/[^/\\s]+", repository):
+        return repository
+
+    root = candidate.resolve()
+    remote = runner(
+        ["git", "-C", str(root), "remote", "get-url", "origin"],
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    if not remote:
+        raise ValueError(f"repository has no origin remote: {root}")
+
+    if remote.startswith("git@github.com:"):
+        path = remote.removeprefix("git@github.com:")
+        host = "github.com"
+    else:
+        parsed = urlparse(remote)
+        host = parsed.hostname or ""
+        path = parsed.path.lstrip("/")
+
+    if host.lower() != "github.com":
+        raise ValueError(f"origin is not a GitHub repository: {remote}")
+
+    path = path.removesuffix(".git").strip("/")
+    if not re.fullmatch(r"[^/]+/[^/]+", path):
+        raise ValueError(f"could not resolve GitHub OWNER/REPO from origin: {remote}")
+    return path
+
+
 def find_run(
     repository: str,
     sha: str,
@@ -32,6 +72,7 @@ def find_run(
     runner=subprocess.run,
 ) -> WorkflowRun | None:
     """Find the newest GitHub Actions run for a pushed commit."""
+    repository = resolve_repository(repository, runner=runner)
     data = _run_json(
         [
             "gh",
@@ -68,6 +109,7 @@ def view_run(
     *,
     runner=subprocess.run,
 ) -> WorkflowRun:
+    repository = resolve_repository(repository, runner=runner)
     data = _run_json(
         [
             "gh",
