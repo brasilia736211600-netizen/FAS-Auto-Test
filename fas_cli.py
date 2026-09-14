@@ -21,8 +21,9 @@ from fas_git import (
     status_porcelain,
 )
 from fas_recovery import build_scope_diagnosis_task
+from fas_report import build_report, render_report, write_report
 from fas_runtime import init_repository, read_state, record_test, select_route, write_state
-from fas_watch import watch_and_recover
+from fas_watch import RecoveryBudgetExceeded, current_sha, watch_and_recover
 from model_router import TaskSignals, available_models
 
 
@@ -106,6 +107,13 @@ def _run_task(args: argparse.Namespace) -> int:
     write_state(repo, state)
 
     if not result.success:
+        state = read_state(repo)
+        state["failure"] = {
+            "class": "repair_command_failed",
+            "stage": "EXECUTE / OPENCODE",
+            "message": f"OpenCode returned exit code {result.attempts[-1].returncode if result.attempts else 1}.",
+        }
+        write_state(repo, state)
         return result.attempts[-1].returncode if result.attempts else 1
 
     test_cmd = args.test_cmd or os.environ.get("FAS_TEST_CMD")
@@ -132,6 +140,7 @@ def _run_task(args: argparse.Namespace) -> int:
             if not allowed_paths:
                 state = read_state(repo)
                 state.setdefault("failure", {})["class"] = "scope_unknown"
+                state.setdefault("failure", {})["stage"] = "COMMIT / SCOPE VALIDATION"
                 write_state(repo, state)
                 return SCOPE_VIOLATION_CODE
         try:
@@ -143,6 +152,8 @@ def _run_task(args: argparse.Namespace) -> int:
         except ScopeViolationError:
             state = read_state(repo)
             state.setdefault("failure", {})["class"] = "scope_violation"
+            state.setdefault("failure", {})["stage"] = "COMMIT / SCOPE VALIDATION"
+            state.setdefault("failure", {})["message"] = "A changed path was outside the declared recovery scope."
             write_state(repo, state)
             return SCOPE_VIOLATION_CODE
         state = read_state(repo)
@@ -155,6 +166,8 @@ def _run_task(args: argparse.Namespace) -> int:
         except PushFailedError:
             state = read_state(repo)
             state.setdefault("failure", {})["class"] = "push_failed"
+            state.setdefault("failure", {})["stage"] = "RECOVERY / PUSH"
+            state.setdefault("failure", {})["message"] = "The repaired checkout could not be pushed to GitHub."
             write_state(repo, state)
             return PUSH_FAILED_CODE
 
@@ -187,6 +200,7 @@ def _watch(args: argparse.Namespace) -> int:
     repo = str(Path(args.repo).expanduser().resolve())
     test_cmd = args.test_cmd or os.environ.get("FAS_TEST_CMD")
     workflow = getattr(args, "workflow", None)
+    initial_sha = current_sha(repo)
 
     def repair_runner(task: str) -> int:
         old_commit = os.environ.get("FAS_COMMIT")
@@ -215,16 +229,34 @@ def _watch(args: argparse.Namespace) -> int:
         if workflow:
             dispatch_workflow(repo, workflow, args.branch)
 
-    result = watch_and_recover(
-        repo,
-        max_attempts=args.max_attempts,
-        poll_limit=args.poll_limit,
-        poll_seconds=args.poll_seconds,
-        repair_runner=repair_runner,
-        diagnose_runner=diagnose_runner,
-        missing_run_handler=missing_run_handler if workflow else None,
+    try:
+        result = watch_and_recover(
+            repo,
+            max_attempts=args.max_attempts,
+            poll_limit=args.poll_limit,
+            poll_seconds=args.poll_seconds,
+            repair_runner=repair_runner,
+            diagnose_runner=diagnose_runner,
+            missing_run_handler=missing_run_handler if workflow else None,
+        )
+    except RecoveryBudgetExceeded as exc:
+        result = "recovery_budget_exhausted"
+        state = read_state(repo)
+        state["failure"] = {"class": result, "stage": "RECOVERY", "message": str(exc)}
+        write_state(repo, state)
+
+    final_sha = current_sha(repo)
+    state = read_state(repo)
+    report = build_report(
+        repository=repo,
+        branch=state.get("git", {}).get("branch"),
+        initial_sha=initial_sha,
+        final_sha=final_sha,
+        result=result,
+        state=state,
     )
-    print(result)
+    write_report(repo, report)
+    print(render_report(report))
     return 0 if result == "success" else 1
 
 
