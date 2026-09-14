@@ -15,38 +15,18 @@ _TRACE_PATH = re.compile(r'\bFile "([^"]+)"')
 _EXISTING_PATH = re.compile(r"(?<![\w./-])([A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)*\.[A-Za-z0-9_.-]+)")
 
 
-def failed_logs(
-    repository: str,
-    run_id: int,
-    *,
-    runner=subprocess.run,
-) -> str:
+def failed_logs(repository: str, run_id: int, *, runner=subprocess.run) -> str:
     repository = resolve_repository(repository, runner=runner)
-    result = runner(
-        ["gh", "run", "view", str(run_id), "--repo", repository, "--log-failed"],
-        check=True,
-        capture_output=True,
-        text=True,
-    )
+    result = runner(["gh", "run", "view", str(run_id), "--repo", repository, "--log-failed"], check=True, capture_output=True, text=True)
     return result.stdout
 
 
-def workflow_file(
-    repository: str | Path,
-    run_id: int,
-    *,
-    runner=subprocess.run,
-) -> str | None:
+def workflow_file(repository: str | Path, run_id: int, *, runner=subprocess.run) -> str | None:
     """Resolve the failed run's workflow definition to a local workflow file."""
     root = Path(repository).expanduser().resolve()
     try:
         repo_name = resolve_repository(str(root), runner=runner)
-        result = runner(
-            ["gh", "run", "view", str(run_id), "--repo", repo_name, "--json", "workflowName"],
-            check=True,
-            capture_output=True,
-            text=True,
-        )
+        result = runner(["gh", "run", "view", str(run_id), "--repo", repo_name, "--json", "workflowName"], check=True, capture_output=True, text=True)
         workflow_name = str(json.loads(result.stdout).get("workflowName", "")).strip()
     except (subprocess.CalledProcessError, ValueError, json.JSONDecodeError):
         return None
@@ -86,11 +66,7 @@ def _resolve_evidence_path(repo: Path, raw_path: str) -> Path | None:
     direct = repo / candidate
     if direct.exists() and ".git" not in direct.parts and ".fas" not in direct.parts:
         return direct
-    matches = [
-        path
-        for path in repo.rglob(candidate.name)
-        if path.is_file() and ".git" not in path.parts and ".fas" not in path.parts
-    ]
+    matches = [path for path in repo.rglob(candidate.name) if path.is_file() and ".git" not in path.parts and ".fas" not in path.parts]
     return matches[0] if len(matches) == 1 else None
 
 
@@ -160,13 +136,7 @@ def build_repair_task(log_path: str | Path, allowed_paths: tuple[str, ...] = ())
     ).format(log=path, scope=scope_text)
 
 
-def recover_once(
-    repository: str,
-    run_id: int,
-    *,
-    repair_runner,
-    diagnose_runner=None,
-) -> int:
+def recover_once(repository: str, run_id: int, *, repair_runner, diagnose_runner=None) -> int:
     """Persist CI evidence and delegate one bounded repair attempt."""
     logs = failed_logs(repository, run_id)
     log_path = persist_failure_logs(repository, logs)
@@ -174,9 +144,11 @@ def recover_once(
     workflow = workflow_file(repository, run_id)
     if workflow and workflow not in allowed_paths:
         allowed_paths.append(workflow)
-    if not allowed_paths and diagnose_runner is not None:
+    if diagnose_runner is not None:
         diagnosis = diagnose_runner(build_scope_diagnosis_task(log_path))
-        allowed_paths.extend(diagnosed_scope(repository, diagnosis))
+        for path in diagnosed_scope(repository, diagnosis):
+            if path not in allowed_paths:
+                allowed_paths.append(path)
     if not allowed_paths:
         return 77
     scope = tuple(allowed_paths)
