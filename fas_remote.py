@@ -67,28 +67,6 @@ def clone_remote(
     )
 
 
-def dispatch_workflow(
-    target: RemoteTarget,
-    workflow: str,
-    *,
-    runner=subprocess.run,
-) -> None:
-    """Explicitly start a workflow_dispatch run for the remote branch."""
-    _run(
-        [
-            "gh",
-            "workflow",
-            "run",
-            workflow,
-            "--repo",
-            target.repository,
-            "--ref",
-            target.branch,
-        ],
-        runner=runner,
-    )
-
-
 def wait_for_remote_change(
     target: RemoteTarget,
     previous_sha: str,
@@ -136,9 +114,6 @@ def run_remote(
             checkout = Path(temp_root) / "repo"
             clone_remote(target, checkout, runner=runner)
 
-            if workflow:
-                dispatch_workflow(target, workflow, runner=runner)
-
             args = type(
                 "RemoteWatchArgs",
                 (),
@@ -148,6 +123,8 @@ def run_remote(
                     "poll_limit": poll_limit,
                     "poll_seconds": poll_seconds,
                     "test_cmd": test_cmd,
+                    "workflow": workflow,
+                    "branch": target.branch,
                 },
             )()
             watcher = watch_runner or _watch
