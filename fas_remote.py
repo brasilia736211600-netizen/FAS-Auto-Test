@@ -1,6 +1,7 @@
 """GitHub-first autonomous supervision using disposable remote checkouts."""
 from __future__ import annotations
 
+import os
 import subprocess
 import tempfile
 import time
@@ -128,7 +129,21 @@ def run_remote(
                 },
             )()
             watcher = watch_runner or _watch
-            result = watcher(args)
+            old_repository = os.environ.get("FAS_REPORT_REPOSITORY")
+            old_branch = os.environ.get("FAS_REPORT_BRANCH")
+            try:
+                os.environ["FAS_REPORT_REPOSITORY"] = target.repository
+                os.environ["FAS_REPORT_BRANCH"] = target.branch
+                result = watcher(args)
+            finally:
+                if old_repository is None:
+                    os.environ.pop("FAS_REPORT_REPOSITORY", None)
+                else:
+                    os.environ["FAS_REPORT_REPOSITORY"] = old_repository
+                if old_branch is None:
+                    os.environ.pop("FAS_REPORT_BRANCH", None)
+                else:
+                    os.environ["FAS_REPORT_BRANCH"] = old_branch
             if result != 0:
                 return "remote_watch_failed"
 
