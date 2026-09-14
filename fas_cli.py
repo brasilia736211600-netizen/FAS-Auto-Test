@@ -127,6 +127,13 @@ def _run_task(args: argparse.Namespace) -> int:
             time.monotonic() - test_start,
         )
         if test.returncode != 0:
+            state = read_state(repo)
+            state["failure"] = {
+                "class": "local_test_failed",
+                "stage": "TEST",
+                "message": f"Test command returned exit code {test.returncode}.",
+            }
+            write_state(repo, state)
             return test.returncode
 
     if os.environ.get("FAS_COMMIT") == "1":
@@ -252,8 +259,8 @@ def _watch(args: argparse.Namespace) -> int:
     final_sha = current_sha(repo)
     state = read_state(repo)
     report = build_report(
-        repository=repo,
-        branch=state.get("git", {}).get("branch"),
+        repository=os.environ.get("FAS_REPORT_REPOSITORY", repo),
+        branch=os.environ.get("FAS_REPORT_BRANCH") or state.get("git", {}).get("branch"),
         initial_sha=initial_sha,
         final_sha=final_sha,
         result=result,
