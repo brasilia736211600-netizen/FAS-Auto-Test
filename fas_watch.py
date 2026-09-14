@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import subprocess
 import time
+from pathlib import Path
 from typing import Callable
 
 from fas_github import classify_run, find_run
@@ -25,13 +26,21 @@ def current_sha(repository: str, *, runner=subprocess.run) -> str:
     return result.stdout.strip()
 
 
+def _state_available(repository: str) -> bool:
+    return (Path(repository).expanduser().resolve() / ".fas" / "state.json").exists()
+
+
 def _record_ci(repository: str, run_id: int, result: str) -> None:
+    if not _state_available(repository):
+        return
     state = read_state(repository)
     state["ci"] = {"run_id": run_id, "result": result}
     write_state(repository, state)
 
 
 def _record_failure(repository: str, failure_class: str, stage: str, message: str | None = None) -> None:
+    if not _state_available(repository):
+        return
     state = read_state(repository)
     state["failure"] = {
         "class": failure_class,
