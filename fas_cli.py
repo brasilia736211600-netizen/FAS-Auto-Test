@@ -9,6 +9,7 @@ import time
 from pathlib import Path
 
 from fas_fallback import candidate_models, run_with_fallback
+from fas_github import dispatch_workflow
 from fas_git import (
     PUSH_FAILED_CODE,
     SCOPE_VIOLATION_CODE,
@@ -46,6 +47,7 @@ def _parser() -> argparse.ArgumentParser:
     watch.add_argument("--max-attempts", type=int, default=3)
     watch.add_argument("--poll-limit", type=int, default=60)
     watch.add_argument("--poll-seconds", type=float, default=5.0)
+    watch.add_argument("--workflow", help="optional workflow to dispatch when no CI run exists for HEAD")
     watch.add_argument("--test-cmd")
     return parser
 
@@ -184,6 +186,7 @@ def _diagnose_scope(repo: str, task: str) -> str:
 def _watch(args: argparse.Namespace) -> int:
     repo = str(Path(args.repo).expanduser().resolve())
     test_cmd = args.test_cmd or os.environ.get("FAS_TEST_CMD")
+    workflow = getattr(args, "workflow", None)
 
     def repair_runner(task: str) -> int:
         old_commit = os.environ.get("FAS_COMMIT")
@@ -208,6 +211,10 @@ def _watch(args: argparse.Namespace) -> int:
     def diagnose_runner(task: str) -> str:
         return _diagnose_scope(repo, task)
 
+    def missing_run_handler(_sha: str) -> None:
+        if workflow:
+            dispatch_workflow(repo, workflow, args.branch)
+
     result = watch_and_recover(
         repo,
         max_attempts=args.max_attempts,
@@ -215,6 +222,7 @@ def _watch(args: argparse.Namespace) -> int:
         poll_seconds=args.poll_seconds,
         repair_runner=repair_runner,
         diagnose_runner=diagnose_runner,
+        missing_run_handler=missing_run_handler if workflow else None,
     )
     print(result)
     return 0 if result == "success" else 1
@@ -232,6 +240,15 @@ def main(argv: list[str] | None = None) -> int:
         print(init_repository(args.repo))
         return 0
     if args.command == "watch":
+        if args.workflow:
+            args.branch = subprocess.run(
+                ["git", "-C", str(Path(args.repo).expanduser().resolve()), "branch", "--show-current"],
+                check=True,
+                capture_output=True,
+                text=True,
+            ).stdout.strip()
+            if not args.branch:
+                raise ValueError("workflow dispatch requires a named branch")
         return _watch(args)
     return _run_task(args)
 
