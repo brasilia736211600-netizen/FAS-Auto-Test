@@ -26,6 +26,8 @@ class MissingRunDispatchTests(unittest.TestCase):
             nonlocal gh_calls
             if command[:4] == ["git", "-C", "/repo", "rev-parse"]:
                 return subprocess.CompletedProcess(command, 0, stdout=sha + "\n", stderr="")
+            if command == ["git", "-C", "/repo", "remote", "get-url", "origin"]:
+                return subprocess.CompletedProcess(command, 0, stdout="https://github.com/owner/repo.git\n", stderr="")
             if command[:3] == ["gh", "run", "list"]:
                 gh_calls += 1
                 payload = [] if gh_calls == 1 else run_payload
