@@ -33,6 +33,7 @@ def watch_and_recover(
     runner=subprocess.run,
     repair_runner: Callable[[str], int],
     diagnose_runner: Callable[[str], str] | None = None,
+    missing_run_handler: Callable[[str], None] | None = None,
 ) -> str:
     """Watch CI and perform bounded recovery until PASS or a stop condition."""
     if max_attempts < 1:
@@ -43,14 +44,19 @@ def watch_and_recover(
     sha = current_sha(repository, runner=runner)
     attempts = 0
     polls = 0
+    dispatched_sha: str | None = None
 
     while polls < poll_limit:
         polls += 1
         run = find_run(repository, sha, runner=runner)
         if run is None:
+            if missing_run_handler is not None and dispatched_sha != sha:
+                missing_run_handler(sha)
+                dispatched_sha = sha
             time.sleep(poll_seconds)
             continue
 
+        dispatched_sha = None
         outcome = classify_run(run)
         if outcome == "pending":
             time.sleep(poll_seconds)
@@ -75,12 +81,11 @@ def watch_and_recover(
         if repair_result != 0:
             return "repair_failed"
 
-        # A successful repair must produce a new commit/push before we watch
-        # again. Refresh HEAD so the next lookup cannot accept the old failed run.
         new_sha = current_sha(repository, runner=runner)
         if new_sha == sha:
             return "repair_not_pushed"
         sha = new_sha
+        dispatched_sha = None
 
     return "poll_limit_exhausted"
 
