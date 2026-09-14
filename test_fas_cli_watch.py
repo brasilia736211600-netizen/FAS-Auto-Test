@@ -20,6 +20,7 @@ def test_cli_watch_delegates_to_bounded_watch_and_prints_report(monkeypatch, tmp
         return "success"
 
     monkeypatch.setattr(fas_cli, "watch_and_recover", fake_watch)
+    monkeypatch.setattr(fas_cli, "init_repository", lambda repo: None)
     monkeypatch.setattr(fas_cli, "current_sha", lambda repo: "abc")
     monkeypatch.setattr(fas_cli, "read_state", lambda repo: _state())
     monkeypatch.setattr(fas_cli, "write_report", lambda repo, report: repo)
@@ -36,6 +37,7 @@ def test_cli_watch_delegates_to_bounded_watch_and_prints_report(monkeypatch, tmp
 
 def test_cli_watch_returns_nonzero_for_terminal_failure_with_report(monkeypatch, tmp_path, capsys):
     monkeypatch.setattr(fas_cli, "watch_and_recover", lambda repo, **kwargs: "scope_violation")
+    monkeypatch.setattr(fas_cli, "init_repository", lambda repo: None)
     monkeypatch.setattr(fas_cli, "current_sha", lambda repo: "abc")
     monkeypatch.setattr(fas_cli, "read_state", lambda repo: _state("failure", {"class": "scope_violation", "stage": "RECOVERY / SCOPE VALIDATION", "message": "Repair changed a path outside the declared recovery scope."}))
     monkeypatch.setattr(fas_cli, "write_report", lambda repo, report: repo)
