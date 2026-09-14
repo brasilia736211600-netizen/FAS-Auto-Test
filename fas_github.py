@@ -65,6 +65,30 @@ def resolve_repository(
     return path
 
 
+def dispatch_workflow(
+    repository: str,
+    workflow: str,
+    branch: str,
+    *,
+    runner=subprocess.run,
+) -> None:
+    """Start a workflow_dispatch run for an explicit GitHub branch."""
+    repository = resolve_repository(repository, runner=runner)
+    runner(
+        [
+            "gh",
+            "workflow",
+            "run",
+            workflow,
+            "--repo",
+            repository,
+            "--ref",
+            branch,
+        ],
+        check=True,
+    )
+
+
 def find_run(
     repository: str,
     sha: str,
