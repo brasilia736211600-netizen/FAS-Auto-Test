@@ -106,6 +106,32 @@ def test_recover_once_uses_model_diagnosis_when_direct_scope_is_missing(tmp_path
     assert seen and "src/broken.py" in seen[0]
 
 
+def test_recover_once_expands_direct_scope_with_model_diagnosis(tmp_path, monkeypatch):
+    monkeypatch.setattr("fas_recovery.ensure_fas_excluded", lambda repo: None)
+    monkeypatch.setattr("fas_recovery.failed_logs", lambda repository, run_id: "FAILED test_live_fixture.py::test_addition")
+    monkeypatch.setattr("fas_recovery.workflow_file", lambda repository, run_id: ".github/workflows/validation.yml")
+    e2e = tmp_path / "e2e"
+    e2e.mkdir()
+    (e2e / "test_live_fixture.py").write_text("assert True\n", encoding="utf-8")
+    workflows = tmp_path / ".github" / "workflows"
+    workflows.mkdir(parents=True)
+    (workflows / "validation.yml").write_text("name: Validation\n", encoding="utf-8")
+    profile = workflows / "profile-codegen.yml"
+    profile.write_text("name: Profile Codegen\n", encoding="utf-8")
+    received = []
+
+    assert recover_once(
+        str(tmp_path),
+        7,
+        diagnose_runner=lambda task: ".github/workflows/profile-codegen.yml\n",
+        repair_runner=lambda task: received.append(task) or 0,
+    ) == 0
+    assert received
+    assert "e2e/" in received[0]
+    assert ".github/workflows/validation.yml" in received[0]
+    assert ".github/workflows/profile-codegen.yml" in received[0]
+
+
 def test_recover_once_persists_logs_and_passes_scope_to_repair(tmp_path, monkeypatch):
     monkeypatch.setattr("fas_recovery.ensure_fas_excluded", lambda repo: None)
     monkeypatch.setattr(
