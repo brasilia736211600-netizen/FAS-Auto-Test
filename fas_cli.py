@@ -197,7 +197,11 @@ def _diagnose_scope(repo: str, task: str) -> str:
 
 
 def _watch(args: argparse.Namespace) -> int:
-    repo = str(Path(args.repo).expanduser().resolve())
+    repo_path = Path(args.repo).expanduser().resolve()
+    state_file = repo_path / ".fas" / "state.json"
+    if not state_file.exists():
+        init_repository(repo_path)
+    repo = str(repo_path)
     test_cmd = args.test_cmd or os.environ.get("FAS_TEST_CMD")
     workflow = getattr(args, "workflow", None)
     initial_sha = current_sha(repo)
