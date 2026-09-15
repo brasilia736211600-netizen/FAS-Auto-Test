@@ -11,8 +11,9 @@ from fas_git import ensure_fas_excluded
 from fas_github import resolve_repository
 
 _FAILED_PATH = re.compile(r"\bFAILED\s+([^\s:]+)(?:::|$)")
-_TRACE_PATH = re.compile(r'\bFile "([^"]+)"')
+_TRACE_PATH = re.compile(r'\bFile "([^"]+)")
 _EXISTING_PATH = re.compile(r"(?<![\w./-])([A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)*\.[A-Za-z0-9_.-]+)")
+_DIAGNOSIS_PATH = re.compile(r"(?<![A-Za-z0-9_.-])(?:\.\/)?(?:[A-Za-z0-9_.-]+\/)*[A-Za-z0-9_.-]+\.[A-Za-z0-9_.-]+(?:/)?")
 
 
 def failed_logs(repository: str, run_id: int, *, runner=subprocess.run) -> str:
@@ -56,7 +57,7 @@ def persist_failure_logs(repo: str | Path, logs: str) -> Path:
 
 
 def _resolve_evidence_path(repo: Path, raw_path: str) -> Path | None:
-    candidate = Path(raw_path.strip().strip("`'\""))
+    candidate = Path(raw_path.strip().strip("`'\".,;:()[]{}"))
     if candidate.is_absolute():
         try:
             candidate.relative_to(repo)
@@ -101,14 +102,18 @@ def build_scope_diagnosis_task(log_path: str | Path) -> str:
 
 
 def diagnosed_scope(repo: str | Path, output: str) -> tuple[str, ...]:
-    """Validate model-proposed recovery scope before permitting mutation."""
+    """Validate model-proposed recovery scope, tolerating prose around path evidence."""
     root = Path(repo).expanduser().resolve()
     scopes = []
     seen = set()
+    candidates = []
     for line in output.splitlines():
         raw = line.strip()
         if not raw or raw.startswith("#"):
             continue
+        candidates.append(raw)
+        candidates.extend(_DIAGNOSIS_PATH.findall(raw))
+    for raw in candidates:
         path = _resolve_evidence_path(root, raw)
         if path is None:
             continue
