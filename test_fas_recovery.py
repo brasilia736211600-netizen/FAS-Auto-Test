@@ -87,6 +87,17 @@ def test_repair_task_points_agent_to_fresh_ci_evidence(tmp_path):
     assert "e2e/" in task
 
 
+def test_repair_task_explains_prior_rejection(tmp_path):
+    task = build_repair_task(
+        tmp_path / ".fas" / "logs" / "ci-failure.log",
+        (".github/workflows/",),
+        retry_context="scope_violation",
+    )
+    assert "previous recovery attempt was rejected" in task
+    assert "scope_violation" in task
+    assert "do not repeat the rejected change" in task
+
+
 def test_recover_once_uses_model_diagnosis_when_direct_scope_is_missing(tmp_path, monkeypatch):
     monkeypatch.setattr("fas_recovery.ensure_fas_excluded", lambda repo: None)
     monkeypatch.setattr("fas_recovery.failed_logs", lambda repository, run_id: "CI failure without a printed path")
