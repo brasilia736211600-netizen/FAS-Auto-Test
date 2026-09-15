@@ -11,7 +11,7 @@ from fas_git import ensure_fas_excluded
 from fas_github import resolve_repository
 
 _FAILED_PATH = re.compile(r"\bFAILED\s+([^\s:]+)(?:::|$)")
-_TRACE_PATH = re.compile(r'\bFile "([^"]+)")
+_TRACE_PATH = re.compile(r'\bFile "([^"]+)"')
 _EXISTING_PATH = re.compile(r"(?<![\w./-])([A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)*\.[A-Za-z0-9_.-]+)")
 _DIAGNOSIS_PATH = re.compile(r"(?<![A-Za-z0-9_.-])(?:\.\/)?(?:[A-Za-z0-9_.-]+\/)*[A-Za-z0-9_.-]+\.[A-Za-z0-9_.-]+(?:/)?")
 
