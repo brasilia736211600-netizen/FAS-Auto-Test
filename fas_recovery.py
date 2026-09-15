@@ -60,15 +60,16 @@ def _resolve_evidence_path(repo: Path, raw_path: str) -> Path | None:
     candidate = Path(raw_path.strip().strip("`'\".,;:()[]{}"))
     if candidate.is_absolute():
         try:
-            candidate.relative_to(repo)
-        except ValueError:
+            resolved = candidate.resolve()
+            resolved.relative_to(repo)
+        except (OSError, ValueError):
             return None
-        return candidate
+        return resolved
     direct = repo / candidate
     if direct.exists() and ".git" not in direct.parts and ".fas" not in direct.parts:
-        return direct
+        return direct.resolve()
     matches = [path for path in repo.rglob(candidate.name) if path.is_file() and ".git" not in path.parts and ".fas" not in path.parts]
-    return matches[0] if len(matches) == 1 else None
+    return matches[0].resolve() if len(matches) == 1 else None
 
 
 def recovery_scope(repo: str | Path, logs: str) -> tuple[str, ...]:
@@ -83,8 +84,14 @@ def recovery_scope(repo: str | Path, logs: str) -> tuple[str, ...]:
     unique = []
     seen = set()
     for path in resolved:
-        relative = path.relative_to(root).as_posix()
-        scope = relative if path.parent == root else f"{path.parent.relative_to(root).as_posix()}/"
+        try:
+            relative_path = path.relative_to(root)
+        except ValueError:
+            continue
+        relative = relative_path.as_posix()
+        if not relative:
+            continue
+        scope = relative if path.is_file() or path.parent == root else f"{relative.rstrip('/')}/"
         if scope not in seen:
             unique.append(scope)
             seen.add(scope)
