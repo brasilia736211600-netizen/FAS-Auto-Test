@@ -1,6 +1,7 @@
 """GitHub-first autonomous supervision using disposable remote checkouts."""
 from __future__ import annotations
 
+import json
 import os
 import subprocess
 import tempfile
@@ -87,6 +88,19 @@ def wait_for_remote_change(
     return None
 
 
+def _persist_report(checkout: Path) -> None:
+    """Copy the disposable checkout report to a persistent FAS-local destination."""
+    destination = os.environ.get("FAS_REMOTE_REPORT_PATH")
+    if not destination:
+        return
+    source = checkout / ".fas" / "recovery-report.json"
+    if not source.exists():
+        return
+    target = Path(destination).expanduser().resolve()
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
+
+
 def _run_clean_watch(
     target: RemoteTarget,
     *,
@@ -97,7 +111,7 @@ def _run_clean_watch(
     runner,
     watch_runner,
     retry_context: str | None,
-) -> tuple[int, str]:
+) -> int:
     """Run one recovery attempt inside a fresh disposable checkout."""
     with tempfile.TemporaryDirectory(prefix="fas-remote-") as temp_root:
         checkout = Path(temp_root) / "repo"
@@ -128,7 +142,8 @@ def _run_clean_watch(
             else:
                 os.environ.pop("FAS_RETRY_CONTEXT", None)
             result = watcher(args)
-            return result, str(checkout)
+            _persist_report(checkout)
+            return result
         finally:
             if old_repository is None:
                 os.environ.pop("FAS_REPORT_REPOSITORY", None)
@@ -172,7 +187,7 @@ def run_remote(
         last_result = 1
 
         for attempt in range(1, max_attempts + 1):
-            result, _checkout = _run_clean_watch(
+            result = _run_clean_watch(
                 target,
                 poll_limit=poll_limit,
                 poll_seconds=poll_seconds,
