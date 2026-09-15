@@ -22,6 +22,12 @@ def build_report(*, repository: str, branch: str | None, initial_sha: str, final
     ci = state.get("ci") or {}
     git = state.get("git") or {}
     test = state.get("test") or {}
+    if not test.get("result") and ci.get("result") == "success":
+        test = {
+            "command": f"GitHub Actions CI run {ci.get('run_id')}",
+            "result": "PASS",
+            "duration_seconds": None,
+        }
     return {
         "status": "PASS" if result == "success" else "FAIL",
         "repository": repository,

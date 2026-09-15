@@ -59,3 +59,6 @@ def test_write_report_is_json_and_rendered_for_success(tmp_path):
     assert "STATUS: PASS" in rendered
     assert "CI_RUN: 9" in rendered
     assert "COMMIT: def" in rendered
+    assert loaded["test"]["result"] == "PASS"
+    assert loaded["test"]["command"] == "GitHub Actions CI run 9"
+    assert "TEST_RESULT: PASS" in rendered
