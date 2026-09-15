@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import subprocess
 import unittest
 
@@ -61,6 +62,40 @@ class RemoteHelpersTests(unittest.TestCase):
         )
         self.assertEqual(result, "success")
         self.assertTrue(any(command[:2] == ["git", "clone"] for command in commands))
+
+    def test_remote_retries_after_failed_watch_with_fresh_checkout_and_context(self) -> None:
+        target = RemoteTarget("owner/repo", "main")
+        sha = "3" * 40
+        contexts = []
+        calls = 0
+
+        def runner(command, **kwargs):
+            if command[:2] == ["git", "ls-remote"]:
+                return subprocess.CompletedProcess(command, 0, stdout=f"{sha}\trefs/heads/main\n", stderr="")
+            if command[:2] == ["git", "clone"]:
+                return subprocess.CompletedProcess(command, 0, stdout="", stderr="")
+            return subprocess.CompletedProcess(command, 0, stdout="", stderr="")
+
+        def watch(args):
+            nonlocal calls
+            calls += 1
+            contexts.append(os.environ.get("FAS_RETRY_CONTEXT"))
+            return 1 if calls == 1 else 0
+
+        result = run_remote(
+            target,
+            max_attempts=2,
+            poll_limit=1,
+            poll_seconds=0,
+            idle_seconds=0,
+            max_cycles=1,
+            runner=runner,
+            watch_runner=watch,
+        )
+        self.assertEqual(result, "success")
+        self.assertEqual(calls, 2)
+        self.assertIsNone(contexts[0])
+        self.assertIn("different minimal repair", contexts[1])
 
 
 if __name__ == "__main__":
