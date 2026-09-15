@@ -125,9 +125,21 @@ def diagnosed_scope(repo: str | Path, output: str) -> tuple[str, ...]:
     return tuple(scopes)
 
 
-def build_repair_task(log_path: str | Path, allowed_paths: tuple[str, ...] = ()) -> str:
+def build_repair_task(
+    log_path: str | Path,
+    allowed_paths: tuple[str, ...] = (),
+    *,
+    retry_context: str | None = None,
+) -> str:
     path = Path(log_path)
     scope_text = ", ".join(allowed_paths) if allowed_paths else "UNKNOWN"
+    context_text = (retry_context or "").strip()
+    if context_text:
+        context_text = (
+            " A previous recovery attempt was rejected by the controller: "
+            f"{context_text} Re-open the CI evidence from scratch, do not repeat "
+            "the rejected change, and prefer the smallest directly supported fix."
+        )
     return (
         "Repair the current repository using the recorded CI failure. "
         "Read the CI log at {log}. Identify the root cause from fresh evidence, "
@@ -137,11 +149,18 @@ def build_repair_task(log_path: str | Path, allowed_paths: tuple[str, ...] = ())
         "the workflow file in scope is eligible; otherwise prefer the concrete source/test "
         "path from the failure evidence. Do not modify files outside that scope unless "
         "the scope is explicitly expanded by the controller. Do not reset, clean, "
-        "force-push, delete unrelated work, or modify secrets."
-    ).format(log=path, scope=scope_text)
+        "force-push, delete unrelated work, or modify secrets.{context}"
+    ).format(log=path, scope=scope_text, context=context_text)
 
 
-def recover_once(repository: str, run_id: int, *, repair_runner, diagnose_runner=None) -> int:
+def recover_once(
+    repository: str,
+    run_id: int,
+    *,
+    repair_runner,
+    diagnose_runner=None,
+    retry_context: str | None = None,
+) -> int:
     """Persist CI evidence and delegate one bounded repair attempt."""
     logs = failed_logs(repository, run_id)
     log_path = persist_failure_logs(repository, logs)
@@ -162,7 +181,7 @@ def recover_once(repository: str, run_id: int, *, repair_runner, diagnose_runner
     try:
         os.environ["FAS_ALLOWED_PATHS"] = "\n".join(scope)
         os.environ["FAS_COMMIT_MESSAGE"] = "fix: autonomous CI recovery"
-        return repair_runner(build_repair_task(log_path, scope))
+        return repair_runner(build_repair_task(log_path, scope, retry_context=retry_context))
     finally:
         if old_scope is None:
             os.environ.pop("FAS_ALLOWED_PATHS", None)
