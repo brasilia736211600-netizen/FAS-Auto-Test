@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - fas-e2e-live
+      - fas-final-acceptance
   workflow_dispatch:
 
 permissions:
