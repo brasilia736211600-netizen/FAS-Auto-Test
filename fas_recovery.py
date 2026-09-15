@@ -85,13 +85,12 @@ def recovery_scope(repo: str | Path, logs: str) -> tuple[str, ...]:
     seen = set()
     for path in resolved:
         try:
-            relative_path = path.relative_to(root)
+            relative = path.relative_to(root).as_posix()
         except ValueError:
             continue
-        relative = relative_path.as_posix()
         if not relative:
             continue
-        scope = relative if path.is_file() or path.parent == root else f"{relative.rstrip('/')}/"
+        scope = relative if path.parent == root else f"{path.parent.relative_to(root).as_posix()}/"
         if scope not in seen:
             unique.append(scope)
             seen.add(scope)
