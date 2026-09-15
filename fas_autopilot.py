@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import argparse
+import json
+import os
 import time
 from pathlib import Path
 
@@ -57,18 +59,33 @@ def run_github(
 ) -> int:
     """Supervise a GitHub branch using disposable checkouts only."""
     from fas_remote import RemoteTarget, run_remote
+    from fas_report import render_report
 
-    result = run_remote(
-        RemoteTarget(repository, branch),
-        max_attempts=max_attempts,
-        poll_limit=poll_limit,
-        poll_seconds=poll_seconds,
-        idle_seconds=idle_seconds,
-        max_cycles=max_cycles,
-        workflow=workflow,
-        test_cmd=test_cmd,
-    )
-    print(result)
+    report_path = Path(".fas") / "recovery-report.json"
+    old_report_path = os.environ.get("FAS_REMOTE_REPORT_PATH")
+    try:
+        os.environ["FAS_REMOTE_REPORT_PATH"] = str(report_path.resolve())
+        result = run_remote(
+            RemoteTarget(repository, branch),
+            max_attempts=max_attempts,
+            poll_limit=poll_limit,
+            poll_seconds=poll_seconds,
+            idle_seconds=idle_seconds,
+            max_cycles=max_cycles,
+            workflow=workflow,
+            test_cmd=test_cmd,
+        )
+    finally:
+        if old_report_path is None:
+            os.environ.pop("FAS_REMOTE_REPORT_PATH", None)
+        else:
+            os.environ["FAS_REMOTE_REPORT_PATH"] = old_report_path
+
+    if report_path.exists():
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+        print(render_report(report))
+    else:
+        print(f"FAS RESULT: {result}")
     return 0 if result == "success" else 1
 
 
