@@ -4,6 +4,7 @@ import os
 import subprocess
 import unittest
 
+import fas_remote
 from fas_remote import RemoteTarget, remote_head, run_remote, wait_for_remote_change
 
 
@@ -96,6 +97,50 @@ class RemoteHelpersTests(unittest.TestCase):
         self.assertEqual(calls, 2)
         self.assertIsNone(contexts[0])
         self.assertIn("different minimal repair", contexts[1])
+
+    def test_mission_mode_requires_explicit_scope(self) -> None:
+        with self.assertRaises(ValueError):
+            run_remote(RemoteTarget("owner/repo", "main"), objective="do the task", max_cycles=1)
+
+    def test_mission_mode_runs_before_ci_watch(self) -> None:
+        target = RemoteTarget("owner/repo", "main")
+        events = []
+        sha = "4" * 40
+
+        def runner(command, **kwargs):
+            if command[:2] == ["git", "ls-remote"]:
+                return subprocess.CompletedProcess(command, 0, stdout=f"{sha}\trefs/heads/main\n", stderr="")
+            if command[:2] == ["git", "clone"]:
+                return subprocess.CompletedProcess(command, 0, stdout="", stderr="")
+            return subprocess.CompletedProcess(command, 0, stdout="", stderr="")
+
+        original = fas_remote._run_clean_task
+        try:
+            fas_remote._run_clean_task = lambda *args, **kwargs: events.append(("mission", args[1], kwargs["scope_paths"])) or 0
+
+            def watch(args):
+                events.append(("watch", args.repo))
+                return 0
+
+            result = run_remote(
+                target,
+                objective="complete CP3 then CP4 and CP5",
+                scope_paths=("modules/nora-view/android/", "security/", ".github/workflows/", "docs/", "app.config.ts"),
+                max_attempts=1,
+                poll_limit=1,
+                poll_seconds=0,
+                idle_seconds=0,
+                max_cycles=1,
+                runner=runner,
+                watch_runner=watch,
+            )
+        finally:
+            fas_remote._run_clean_task = original
+
+        self.assertEqual(result, "success")
+        self.assertEqual(events[0][0], "mission")
+        self.assertIn("CP3", events[0][1])
+        self.assertEqual(events[1][0], "watch")
 
 
 if __name__ == "__main__":
