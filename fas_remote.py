@@ -1,7 +1,6 @@
 """GitHub-first autonomous supervision using disposable remote checkouts."""
 from __future__ import annotations
 
-import json
 import os
 import subprocess
 import tempfile
@@ -101,6 +100,50 @@ def _persist_report(checkout: Path) -> None:
     target.write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
 
 
+def _run_clean_task(
+    target: RemoteTarget,
+    objective: str,
+    *,
+    scope_paths: tuple[str, ...],
+    test_cmd: str | None,
+    runner,
+) -> int:
+    """Execute one explicit mission in a fresh disposable checkout."""
+    from fas_cli import main
+
+    if not scope_paths:
+        raise ValueError("mission execution requires explicit scope paths")
+    with tempfile.TemporaryDirectory(prefix="fas-remote-task-") as temp_root:
+        checkout = Path(temp_root) / "repo"
+        clone_remote(target, checkout, runner=runner)
+        old_commit = os.environ.get("FAS_COMMIT")
+        old_push = os.environ.get("FAS_PUSH")
+        old_scope = os.environ.get("FAS_ALLOWED_PATHS")
+        old_message = os.environ.get("FAS_COMMIT_MESSAGE")
+        try:
+            os.environ["FAS_COMMIT"] = "1"
+            os.environ["FAS_PUSH"] = "1"
+            os.environ["FAS_ALLOWED_PATHS"] = "\n".join(scope_paths)
+            os.environ["FAS_COMMIT_MESSAGE"] = "feat: execute FAS mission"
+            argv = ["run", objective, "--repo", str(checkout), "--recovery"]
+            if test_cmd:
+                argv.extend(["--test-cmd", test_cmd])
+            result = main(argv)
+            _persist_report(checkout)
+            return result
+        finally:
+            for name, previous in (
+                ("FAS_COMMIT", old_commit),
+                ("FAS_PUSH", old_push),
+                ("FAS_ALLOWED_PATHS", old_scope),
+                ("FAS_COMMIT_MESSAGE", old_message),
+            ):
+                if previous is None:
+                    os.environ.pop(name, None)
+                else:
+                    os.environ[name] = previous
+
+
 def _run_clean_watch(
     target: RemoteTarget,
     *,
@@ -169,20 +212,39 @@ def run_remote(
     max_cycles: int | None = None,
     workflow: str | None = None,
     test_cmd: str | None = None,
+    objective: str | None = None,
+    scope_paths: tuple[str, ...] = (),
     runner=subprocess.run,
     watch_runner: Callable[[object], int] | None = None,
 ) -> str:
-    """Run FAS against GitHub using clean disposable retries and clean-branch monitoring."""
+    """Run FAS against GitHub using explicit missions plus bounded CI recovery."""
     if max_cycles is not None and max_cycles < 1:
         raise ValueError("max_cycles must be positive when provided")
     if max_attempts < 1 or poll_limit < 1:
         raise ValueError("max_attempts and poll_limit must be positive")
     if idle_seconds < 0:
         raise ValueError("idle_seconds must not be negative")
+    if objective and not scope_paths:
+        raise ValueError("objective mode requires explicit scope paths")
 
     cycles = 0
+    objective_pending = objective
     while max_cycles is None or cycles < max_cycles:
         baseline = remote_head(target.repository, target.branch, runner=runner)
+
+        if objective_pending is not None:
+            mission_result = _run_clean_task(
+                target,
+                objective_pending,
+                scope_paths=scope_paths,
+                test_cmd=test_cmd,
+                runner=runner,
+            )
+            objective_pending = None
+            if mission_result != 0:
+                return "remote_mission_failed"
+            baseline = remote_head(target.repository, target.branch, runner=runner)
+
         retry_context = None
         last_result = 1
 
