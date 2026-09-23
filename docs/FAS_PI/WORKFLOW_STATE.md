@@ -50,6 +50,10 @@ Do not replace this baseline with a smaller focused-suite result.
   `docs/FAS_PI/reports/2026-09-24_B_CHILD_RESULT_CONTRACT.md`; 351/351 GREEN).
 - C Role+Capability mapping implemented (2026-09-24; report
   `docs/FAS_PI/reports/2026-09-24_C_ROLE_ROUTING.md`; 396/396 GREEN).
+- A minimal Pi Skills implemented (2026-09-24; report
+  `docs/FAS_PI/reports/2026-09-24_A_PI_SKILLS.md`; zero source changes).
+- F minimal safety gates implemented (2026-09-24; report
+  `docs/FAS_PI/reports/2026-09-24_F_SAFETY_GATES.md`; 440/440 GREEN).
 
 ## Open work
 

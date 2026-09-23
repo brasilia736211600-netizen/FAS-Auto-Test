@@ -70,6 +70,11 @@ Checks:
 - verify Pi load behavior;
 - regression-test FAS behavior.
 
+Status: COMPLETE (2026-09-24; `docs/FAS_PI/reports/2026-09-24_A_PI_SKILLS.md`).
+Key finding: FAS injects zero policy text today, so A avoids future prompt cost
+(2 Skills, 1,059 B always-on metadata, bodies on demand, 24 focused, 440/440).
+No source modified.
+
 ### 2.2 Child Result Contract
 Goal: standardize child output as structured evidence.
 
@@ -178,6 +183,12 @@ Possible scope:
 - risky tool classification.
 
 Acceptance requires concrete abuse/regression tests.
+
+Status: COMPLETE (2026-09-24; `docs/FAS_PI/reports/2026-09-24_F_SAFETY_GATES.md`).
+Pre-spawn declaration gates (destructive git + out-of-scope paths) in runPhase,
+credential value-shape redaction hardening, 20 abuse/regression tests, 440/440.
+In-execution veto impossible in Pi 0.85.1 API (observational events only) —
+documented residual risk, no speculative framework added.
 
 ### 2.7 Theme
 Goal: optional observability-oriented FAS TUI theme.

@@ -22,7 +22,11 @@ B Child Result Contract is COMPLETE (2026-09-24;
 `docs/FAS_PI/reports/2026-09-24_B_CHILD_RESULT_CONTRACT.md`).
 C Role+Capability mapping is COMPLETE (2026-09-24;
 `docs/FAS_PI/reports/2026-09-24_C_ROLE_ROUTING.md`).
-Run Phase-2 implementation in audit order: **A → F → E → D** per
+A minimal Pi Skills is COMPLETE (2026-09-24;
+`docs/FAS_PI/reports/2026-09-24_A_PI_SKILLS.md`).
+F minimal safety gates are COMPLETE (2026-09-24;
+`docs/FAS_PI/reports/2026-09-24_F_SAFETY_GATES.md`).
+Run Phase-2 implementation in audit order: **E → D** per
 `docs/FAS_PI/reports/PHASE2_EVIDENCE_AUDIT_2026-09-23.md`.
 
 Do not spend time redoing closed work. Do not rerun Leg 1, L6, or Leg 2 unless
