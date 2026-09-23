@@ -13,8 +13,9 @@ This directory is the durable execution context for the **Pi-based FAS** line. I
 Read these files before changing the current Pi/FAS implementation:
 
 1. `MASTER_PROJECT_MAP.md`
-2. `WORKFLOW_STATE.md`
-3. `RESEARCH_AND_DECISIONS_2026-09-23.md`
+2. `GITHUB_WORKFLOW.md`
+3. `WORKFLOW_STATE.md`
+4. `RESEARCH_AND_DECISIONS_2026-09-23.md`
 5. `ROADMAP.md`
 6. `RESUME.md`
 
@@ -33,9 +34,10 @@ The current line documented here is:
 When resuming:
 
 1. GitHub repository code, tests, commits, and this `docs/FAS_PI/` directory are authoritative for project intent/state.
-2. The GitHub execution/report workflow in `GITHUB_WORKFLOW.md` defines how changes and reports are persisted. is authoritative for claims about what actually runs.
-3. Fresh runtime evidence are historical evidence; do not turn a report into a new runtime claim without reproving it when the claim matters.
-4. Existing reports is context only and never completion proof.
+2. `GITHUB_WORKFLOW.md` defines how work and reports are persisted in GitHub and is part of the canonical execution context.
+3. Fresh runtime evidence is authoritative for claims about what actually runs.
+4. Existing reports are historical evidence; do not turn a report into a new runtime claim without reproving it when the claim matters.
+5. Chat history is context only and never completion proof.
 
 ## Secret rule
 
