@@ -12,5 +12,6 @@ Rules:
 Naming:
 `YYYY-MM-DD_<subject>.md` for new reports where practical.
 
-Current report:
+Current reports:
+- `LEG2_WORKFLOW_SUCCESS_2026-09-23.md`
 - `PHASE2_EVIDENCE_AUDIT_2026-09-23.md`
