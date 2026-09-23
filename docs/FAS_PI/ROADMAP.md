@@ -171,6 +171,12 @@ Candidate concepts:
 
 Acceptance requires a demonstrated failure/restart gap. Do not add a durability framework merely because OpenMuse/AlphaCode have one.
 
+Status: COMPLETE minimal (2026-09-24; `docs/FAS_PI/reports/2026-09-24_E_WORKFLOW_RESUME.md`).
+Resume-from-phase reusing existing versioned snapshots (skip succeeded, rerun
+from first non-success, version gate locked); 18 focused tests incl. live
+spawn-counting resume proof, 458/458. Journal/lease/receipt rejected — nothing
+needed them.
+
 ### 2.6 Safety/permission boundary
 Goal: make autonomous execution policy explicit where current FAS behavior is insufficient.
 
