@@ -14,9 +14,8 @@ Current GitHub repo used for Linux runtime proof: `brasilia736211600-netizen/FAS
 
 Current branch: `fas-feature-test`
 
-Latest GitHub commit inspected before this state save:
-
-`c91f65409469e92271a05f0a93394d6e087ce356`
+Latest GitHub baseline commit before the Phase-2 documentation updates: `c91f65409469e92271a05f0a93394d6e087ce356`.
+Current HEAD is advanced by documentation/report updates; inspect GitHub before making source changes.
 
 ## Main test baseline
 
@@ -46,13 +45,13 @@ Do not replace this baseline with a smaller focused-suite result.
 - L6 all-candidates-fail/no-previous-model live-closed.
 - Codespace Node/Pi toolchain default repair complete.
 - Leg 2 Workflow success-path turn live-proven (2026-09-23; report
-  `docs/REPORTS/LEG2_WORKFLOW_SUCCESS_2026-09-23.md`; 324/324 re-verified).
+  `docs/FAS_PI/reports/LEG2_WORKFLOW_SUCCESS_2026-09-23.md`; 324/324 re-verified).
 
 ## Open work
 
 ### CLOSED-1 — Leg 2 (proven 2026-09-23)
 
-Proved (evidence: `docs/REPORTS/LEG2_WORKFLOW_SUCCESS_2026-09-23.md`):
+Proved (evidence: `docs/FAS_PI/reports/LEG2_WORKFLOW_SUCCESS_2026-09-23.md`):
 
 `Workflow success path -> child -> FAS extension loaded -> fas-router/auto -> real provider turn -> workflow success`
 
@@ -123,13 +122,6 @@ A provider credential is a prerequisite for the real-provider leg. It must exist
 
 ## Completion gates
 
-Do not call the current runtime milestone complete because:
+Phase 1 runtime closure is COMPLETE because Leg 1, L6, and Leg 2 have fresh evidence and the 324/324 suite was re-verified.
 
-- the code compiles;
-- unit tests pass;
-- a child can boot;
-- FAS can route without a provider;
-- a credential exists in a different shell;
-- an agent says “done”.
-
-The successful provider turn itself is the missing proof.
+For every future milestone, do not accept source changes, passing unit tests, or an agent statement alone as completion proof. Use the evidence chain in `GITHUB_WORKFLOW.md`.
