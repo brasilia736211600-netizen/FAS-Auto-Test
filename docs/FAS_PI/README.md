@@ -47,6 +47,6 @@ A checkbox, plan item, or agent statement is not proof. Completion requires fres
 
 ## Current next gate
 
-The only currently open Linux runtime proof for the present baseline is **Leg 2: Workflow success-path turn under `fas-router/auto` with a real provider credential visible to the same Pi process**.
+Leg 1, L6, and Leg 2 are CLOSED. The current gate is Phase 2 implementation in the evidence-backed order recorded in `reports/PHASE2_EVIDENCE_AUDIT_2026-09-23.md`.
 
-Do not rerun already closed Leg 1 or L6 unless new evidence invalidates them.
+Do not rerun closed runtime legs unless fresh evidence indicates regression.
