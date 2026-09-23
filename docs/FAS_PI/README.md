@@ -15,8 +15,8 @@ Read these files before changing the current Pi/FAS implementation:
 1. `MASTER_PROJECT_MAP.md`
 2. `WORKFLOW_STATE.md`
 3. `RESEARCH_AND_DECISIONS_2026-09-23.md`
-4. `ROADMAP.md`
-5. `RESUME.md`
+5. `ROADMAP.md`
+6. `RESUME.md`
 
 Dated reports and runtime evidence belong under `docs/FAS_PI/reports/`. Do not place report files directly in this directory.
 
@@ -33,9 +33,9 @@ The current line documented here is:
 When resuming:
 
 1. GitHub repository code, tests, commits, and this `docs/FAS_PI/` directory are authoritative for project intent/state.
-2. Fresh runtime evidence is authoritative for claims about what actually runs.
-3. Existing reports are historical evidence; do not turn a report into a new runtime claim without reproving it when the claim matters.
-4. Chat history is context only and never completion proof.
+2. The GitHub execution/report workflow in `GITHUB_WORKFLOW.md` defines how changes and reports are persisted. is authoritative for claims about what actually runs.
+3. Fresh runtime evidence are historical evidence; do not turn a report into a new runtime claim without reproving it when the claim matters.
+4. Existing reports is context only and never completion proof.
 
 ## Secret rule
 
