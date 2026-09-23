@@ -76,4 +76,4 @@ FAS routing, and the real-provider path before spending the workflow leg.
 - Next: Phase-2 evidence-backed enhancements in audit order
   (`docs/FAS_PI/PHASE2_EVIDENCE_AUDIT_2026-09-23.md`).
 - Codespace stopped after credential-state cleanup (volume evidence retained until
-  retention expiry; reports now live in `docs/REPORTS/` so volume loss is acceptable).
+  retention expiry; reports now live in `docs/FAS_PI/reports/` so volume loss is acceptable).
