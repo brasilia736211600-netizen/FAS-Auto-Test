@@ -7,10 +7,11 @@ Updated: 2026-09-23
 A new agent/session must read, in this order:
 
 1. `docs/FAS_PI/README.md`
-2. `docs/FAS_PI/MASTER_PROJECT_MAP.md`
-3. `docs/FAS_PI/WORKFLOW_STATE.md`
-4. `docs/FAS_PI/ROADMAP.md`
-5. `docs/FAS_PI/RESEARCH_AND_DECISIONS_2026-09-23.md`
+2. `docs/FAS_PI/GITHUB_WORKFLOW.md`
+3. `docs/FAS_PI/MASTER_PROJECT_MAP.md`
+4. `docs/FAS_PI/WORKFLOW_STATE.md`
+5. `docs/FAS_PI/ROADMAP.md`
+6. `docs/FAS_PI/RESEARCH_AND_DECISIONS_2026-09-23.md`
 
 Then inspect the current GitHub branch and relevant source/tests before making any edits.
 
