@@ -18,6 +18,8 @@ Read these files before changing the current Pi/FAS implementation:
 4. `ROADMAP.md`
 5. `RESUME.md`
 
+Dated reports and runtime evidence belong under `docs/FAS_PI/reports/`. Do not place report files directly in this directory.
+
 ## Important scope split
 
 The repository already contains an older `.fas/FAS_FINAL_PLAN.md` describing a **Python/OpenCode FAS** line. That document remains historical/parallel context and must not be silently treated as the current Pi/FAS architecture.
