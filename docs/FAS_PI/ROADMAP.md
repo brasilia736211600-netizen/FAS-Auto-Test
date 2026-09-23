@@ -40,7 +40,7 @@ COMPLETE (2026-09-23)
 
 One real provider turn through Workflow child under `fas-router/auto` — proven.
 
-Acceptance evidence (all captured in `docs/REPORTS/LEG2_WORKFLOW_SUCCESS_2026-09-23.md`):
+Acceptance evidence (all captured in `docs/FAS_PI/reports/LEG2_WORKFLOW_SUCCESS_2026-09-23.md`):
 
 - credential visible to the same process without value disclosure;
 - child argv;
@@ -53,7 +53,7 @@ Acceptance evidence (all captured in `docs/REPORTS/LEG2_WORKFLOW_SUCCESS_2026-09
 ## Phase 2 — Evidence-backed architecture enhancement
 Status: AUDIT COMPLETE, IMPLEMENTATION NOT STARTED
 
-Evidence audit: `docs/FAS_PI/PHASE2_EVIDENCE_AUDIT_2026-09-23.md` (audits A–F,
+Evidence audit: `docs/FAS_PI/reports/PHASE2_EVIDENCE_AUDIT_2026-09-23.md` (audits A–F,
 read-only, zero source changes). Implementation order: B contract → C roles →
 A Skills → F safety → E resume-from-phase → D local provider.
 
