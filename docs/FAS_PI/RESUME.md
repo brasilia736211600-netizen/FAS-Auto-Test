@@ -1,119 +1,58 @@
 # FAS-Pi Resume Procedure
 
-Updated: 2026-09-23
+Updated: 2026-09-24
 
 ## Mandatory first read
 
-A new agent/session must read, in this order:
+1. docs/FAS_PI/README.md
+2. docs/FAS_PI/GITHUB_WORKFLOW.md
+3. docs/FAS_PI/autonomy/AUTONOMOUS_OPERATOR_MANDATE.md
+4. docs/FAS_PI/autonomy/EXECUTION_PROTOCOL.md
+5. docs/FAS_PI/autonomy/TASK_QUEUE.md
+6. docs/FAS_PI/autonomy/FINALIZATION_AND_HANDOFF.md
+7. docs/FAS_PI/MASTER_PROJECT_MAP.md
+8. docs/FAS_PI/WORKFLOW_STATE.md
+9. docs/FAS_PI/ROADMAP.md
+10. all relevant files under docs/FAS_PI/reports/
 
-1. `docs/FAS_PI/README.md`
-2. `docs/FAS_PI/GITHUB_WORKFLOW.md`
-3. `docs/FAS_PI/MASTER_PROJECT_MAP.md`
-4. `docs/FAS_PI/WORKFLOW_STATE.md`
-5. `docs/FAS_PI/ROADMAP.md`
-6. `docs/FAS_PI/RESEARCH_AND_DECISIONS_2026-09-23.md`
+Then inspect current GitHub HEAD, branch, source, tests, and diff before changing anything.
 
-Then inspect the current GitHub branch and relevant source/tests before making any edits.
+## Current state
 
-## Current immediate action
+Phase 1 runtime closure: COMPLETE.
+Phase 2 implemented scope: substantially complete.
+Current regression lineage: 469/469 GREEN.
+D suitable local-provider proof: BLOCKED without a real daemon.
+E multi-process resume proof: UNKNOWN.
+C role-call-site wiring: DEFERRED unless a real orchestrator role field exists.
 
-Leg 2 is CLOSED (2026-09-23; `docs/FAS_PI/reports/LEG2_WORKFLOW_SUCCESS_2026-09-23.md`).
-B Child Result Contract is COMPLETE (2026-09-24;
-`docs/FAS_PI/reports/2026-09-24_B_CHILD_RESULT_CONTRACT.md`).
-C Role+Capability mapping is COMPLETE (2026-09-24;
-`docs/FAS_PI/reports/2026-09-24_C_ROLE_ROUTING.md`).
-A minimal Pi Skills is COMPLETE (2026-09-24;
-`docs/FAS_PI/reports/2026-09-24_A_PI_SKILLS.md`).
-F minimal safety gates are COMPLETE (2026-09-24;
-`docs/FAS_PI/reports/2026-09-24_F_SAFETY_GATES.md`).
-E resume-from-phase is COMPLETE (2026-09-24;
-`docs/FAS_PI/reports/2026-09-24_E_WORKFLOW_RESUME.md`).
-D local discovery is PARTIAL (2026-09-24;
-`docs/FAS_PI/reports/2026-09-24_D_LOCAL_DISCOVERY.md`): discovery/validation
-done, suitable-path live proof BLOCKED (no daemon). Phase-2 implementation is
-complete to the extent the environment supports — see final verification in
-the D report thread before new work.
+## Immediate instruction
 
-Do not spend time redoing closed work. Do not rerun Leg 1, L6, or Leg 2 unless
-fresh evidence shows regression.
+Do not rerun completed legs or Phase-2 work merely to reconfirm them.
 
-## Leg 2 acceptance sequence
+Start from autonomy/TASK_QUEUE.md and perform the next incomplete evidence-backed item. Use Subagents for independent work with explicit ownership and structured results.
 
-1. Start/reuse Linux Codespace.
-2. Verify the same shell/process has:
-   - Node v26.4.0;
-   - Pi 0.85.1;
-   - Linux platform;
-   - `OPENROUTER_API_KEY` present.
-3. Never print the key.
-4. Run the Workflow success path using effective child model `fas-router/auto`.
-5. Capture child argv.
-6. Prove FAS extension loading.
-7. Prove the real provider request succeeds.
-8. Prove the Workflow turn completes successfully.
-9. Capture fresh evidence.
-10. Stop immediately on missing credentials or unsupported runtime prerequisites.
-11. Do not modify FAS/Autopilot/Subagents/Workflow/compose/Pi source during the proof.
-12. Clean credential-bearing runtime state.
-13. Stop the Codespace.
-14. Save the exact result.
-15. Update this directory before starting unrelated enhancement work.
+## Per-item loop
 
-## If Leg 2 fails
+READ -> VERIFY -> RECONCILE -> PLAN -> FAIL-FIRST -> MINIMAL CHANGE -> FOCUSED TEST -> FULL REGRESSION -> DIFF/SECURITY/YAGNI REVIEW -> RUNTIME PROOF WHEN REQUIRED -> REPORT -> STATE UPDATE -> COMMIT -> PUSH -> REMOTE VERIFY -> CHECKPOINT -> NEXT
 
-Classify first:
+## Interruption recovery
 
-- `CREDENTIAL_MISSING`
-- `TOOLCHAIN_MISMATCH`
-- `PROVIDER_FAILURE`
-- `CHILD_BOOT_FAILURE`
-- `FAS_LOAD_FAILURE`
-- `WORKFLOW_FAILURE`
-- `TELEMETRY_GAP`
-- `UNKNOWN`
+After any interruption:
+1. reconnect to a suitable environment;
+2. read the canonical files above;
+3. inspect Git HEAD and diff;
+4. find the latest report/checkpoint;
+5. continue from the first incomplete queue item;
+6. rerun only evidence invalidated by the interruption.
 
-Then change the smallest thing necessary. A failure must never trigger speculative architecture changes.
+Never reconstruct state from chat memory.
 
-## After Leg 2 passes
+## Final gate
 
-Perform the Phase 2 evidence review in roadmap order, but parallelize read-only research where useful:
+When all technical work is complete, run the finalization program and create handoff artifacts.
 
-A. Pi Skills inventory and load/cost analysis.
-B. Child result contract draft.
-C. Role/capability profile draft.
-D. Local provider capability inventory.
-E. Durability gap analysis.
-F. Safety/permission gap analysis.
+Stop only at:
+FINAL-HANDOFF-READY: USER-APPROVAL-REQUIRED
 
-Only merge changes that close a demonstrated gap.
-
-## Anti-hallucination protocol
-
-For any future claim:
-
-`claim -> source -> test -> runtime proof when needed -> state update`
-
-Use these labels:
-
-- `VERIFIED`: directly supported by current source/test/runtime evidence.
-- `HISTORICAL`: true of an earlier recorded state.
-- `REPORTED`: reported by a prior agent/run but not freshly reproven.
-- `UNKNOWN`: insufficient evidence.
-- `BLOCKED`: required prerequisite unavailable.
-
-Never upgrade UNKNOWN/REPORTED to VERIFIED by assumption.
-
-## No-secret protocol
-
-The context directory is public-safe documentation.
-
-Never write:
-
-- API keys;
-- access tokens;
-- cookies;
-- passwords;
-- private authentication payloads;
-- raw secret-bearing environment dumps.
-
-Use presence-only language for credentials.
+The final repository is not created before explicit approval.
