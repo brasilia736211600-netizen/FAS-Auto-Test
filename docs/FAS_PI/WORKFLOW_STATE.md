@@ -48,6 +48,8 @@ Do not replace this baseline with a smaller focused-suite result.
   `docs/FAS_PI/reports/LEG2_WORKFLOW_SUCCESS_2026-09-23.md`; 324/324 re-verified).
 - B Child Result Contract implemented for subagents (2026-09-24; report
   `docs/FAS_PI/reports/2026-09-24_B_CHILD_RESULT_CONTRACT.md`; 351/351 GREEN).
+- C Role+Capability mapping implemented (2026-09-24; report
+  `docs/FAS_PI/reports/2026-09-24_C_ROLE_ROUTING.md`; 396/396 GREEN).
 
 ## Open work
 

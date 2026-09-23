@@ -20,7 +20,9 @@ Then inspect the current GitHub branch and relevant source/tests before making a
 Leg 2 is CLOSED (2026-09-23; `docs/FAS_PI/reports/LEG2_WORKFLOW_SUCCESS_2026-09-23.md`).
 B Child Result Contract is COMPLETE (2026-09-24;
 `docs/FAS_PI/reports/2026-09-24_B_CHILD_RESULT_CONTRACT.md`).
-Run Phase-2 implementation in audit order: **C → A → F → E → D** per
+C Role+Capability mapping is COMPLETE (2026-09-24;
+`docs/FAS_PI/reports/2026-09-24_C_ROLE_ROUTING.md`).
+Run Phase-2 implementation in audit order: **A → F → E → D** per
 `docs/FAS_PI/reports/PHASE2_EVIDENCE_AUDIT_2026-09-23.md`.
 
 Do not spend time redoing closed work. Do not rerun Leg 1, L6, or Leg 2 unless

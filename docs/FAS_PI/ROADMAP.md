@@ -93,6 +93,17 @@ Acceptance (all met 2026-09-24; `docs/FAS_PI/reports/2026-09-24_B_CHILD_RESULT_C
 Status: COMPLETE for subagents relay. Child-side emission instruction deferred to
 C (role-gated prompt); workflow's existing structured tool left untouched.
 
+### 2.3 Role + Capability Profiles — COMPLETE (2026-09-24)
+
+Implemented as pure role→constraint mapping over existing scorer fields
+(`~/.pi/extensions/fas/roles.ts`, zero existing-file modifications):
+explorer/implementer/tester/reviewer/debugger, deterministic routing tests,
+fallback preserved, no second ranker, no per-role model lists, no LLM inference.
+Evidence: `docs/FAS_PI/reports/2026-09-24_C_ROLE_ROUTING.md` (45 focused, 396/396).
+
+Remaining: wiring snippets into role-spawn call sites (needs orchestrator-declared
+role field — future step, not speculated).
+
 ### 2.3 Role + Capability Profiles
 Goal: route based on task needs rather than only model names.
 
