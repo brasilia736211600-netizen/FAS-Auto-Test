@@ -418,9 +418,14 @@ with declarative FAS policies available as on-demand Pi Skills and with optional
 
 ## 14. Definition of done for the current Pi/FAS runtime milestone
 
-The current milestone is not complete until Leg 2 is live-proven.
+Leg 2 was live-proven on 2026-09-23
+(`docs/REPORTS/LEG2_WORKFLOW_SUCCESS_2026-09-23.md`): Leg 1, L6, and Leg 2 are
+all CLOSED and the 324/324 baseline is green. The Phase-1 runtime milestone is
+complete.
 
-Then the next milestone begins with a fresh architectural review against this document, followed by the smallest evidence-backed enhancement set.
+The next milestone is Phase-2 implementation in the exact audit order B → C → A →
+F → E → D (`docs/FAS_PI/PHASE2_EVIDENCE_AUDIT_2026-09-23.md`), each step behind
+its own focused test + full-suite + state save.
 
 ## 15. Hard anti-hallucination rule
 

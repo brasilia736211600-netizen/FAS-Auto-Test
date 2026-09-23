@@ -36,11 +36,11 @@ COMPLETE
 - all-candidates-fail/no-previous-model path live-proven cleanly.
 
 ### 1.4 Leg 2
-OPEN
+COMPLETE (2026-09-23)
 
-One real provider turn through Workflow child under `fas-router/auto`.
+One real provider turn through Workflow child under `fas-router/auto` — proven.
 
-Acceptance evidence:
+Acceptance evidence (all captured in `docs/REPORTS/LEG2_WORKFLOW_SUCCESS_2026-09-23.md`):
 
 - credential visible to the same process without value disclosure;
 - child argv;
@@ -51,7 +51,11 @@ Acceptance evidence:
 - cleanup.
 
 ## Phase 2 — Evidence-backed architecture enhancement
-Status: NOT STARTED
+Status: AUDIT COMPLETE, IMPLEMENTATION NOT STARTED
+
+Evidence audit: `docs/FAS_PI/PHASE2_EVIDENCE_AUDIT_2026-09-23.md` (audits A–F,
+read-only, zero source changes). Implementation order: B contract → C roles →
+A Skills → F safety → E resume-from-phase → D local provider.
 
 Do these in evidence-first order.
 

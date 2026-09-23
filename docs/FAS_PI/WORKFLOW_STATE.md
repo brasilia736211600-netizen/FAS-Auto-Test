@@ -45,26 +45,23 @@ Do not replace this baseline with a smaller focused-suite result.
 - Codespace Linux child path (Leg 1) live-closed.
 - L6 all-candidates-fail/no-previous-model live-closed.
 - Codespace Node/Pi toolchain default repair complete.
+- Leg 2 Workflow success-path turn live-proven (2026-09-23; report
+  `docs/REPORTS/LEG2_WORKFLOW_SUCCESS_2026-09-23.md`; 324/324 re-verified).
 
 ## Open work
 
-### OPEN-1 — Leg 2
+### CLOSED-1 — Leg 2 (proven 2026-09-23)
 
-Prove:
+Proved (evidence: `docs/REPORTS/LEG2_WORKFLOW_SUCCESS_2026-09-23.md`):
 
 `Workflow success path -> child -> FAS extension loaded -> fas-router/auto -> real provider turn -> workflow success`
 
-Required preconditions:
+Fresh ps-captured child argv with `-e <fas>` + `--model fas-router/auto`, FAS
+routing active, exact-output provider turn (`LEG2-PROBE-OK`), phase `succeeded`,
+`Workflow finished`, credential presence-only, staging cleaned, 324/324 GREEN,
+no unrelated diff.
 
-- same-process `OPENROUTER_API_KEY` presence;
-- Node v26.4.0;
-- Pi 0.85.1;
-- Linux platform;
-- cgroup-v2-compatible environment.
-
-Do not expose the credential.
-
-### OPEN-2 — Post-Leg-2 enhancement review
+### OPEN-2 — Post-Leg-2 enhancement review (audit complete, implementation pending)
 
 Only after Leg 2:
 

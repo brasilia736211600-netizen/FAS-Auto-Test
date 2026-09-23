@@ -16,9 +16,12 @@ Then inspect the current GitHub branch and relevant source/tests before making a
 
 ## Current immediate action
 
-Run **Leg 2 only**.
+Leg 2 is CLOSED (2026-09-23; `docs/REPORTS/LEG2_WORKFLOW_SUCCESS_2026-09-23.md`).
+Run Phase-2 implementation in audit order: **B → C → A → F → E → D** per
+`docs/FAS_PI/PHASE2_EVIDENCE_AUDIT_2026-09-23.md`.
 
-Do not spend time redoing closed work. Do not rerun Leg 1 or L6 unless fresh evidence shows regression.
+Do not spend time redoing closed work. Do not rerun Leg 1, L6, or Leg 2 unless
+fresh evidence shows regression.
 
 ## Leg 2 acceptance sequence
 
