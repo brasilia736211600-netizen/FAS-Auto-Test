@@ -1,54 +1,55 @@
 # FAS-Pi Project Context
 
-> Canonical GitHub context for the current Pi-based FAS (Full Autonomous Stack) project.
->
-> Updated: 2026-09-23
-> Repository: brasilia736211600-netizen/FAS-Auto-Test
-> Branch: fas-feature-test
+Canonical GitHub context for the current Pi-based FAS (Full Autonomous Stack) project.
+
+Updated: 2026-09-24
+Repository: brasilia736211600-netizen/FAS-Auto-Test
+Branch: fas-feature-test
+
+## Read before acting
+
+1. MASTER_PROJECT_MAP.md
+2. GITHUB_WORKFLOW.md
+3. WORKFLOW_STATE.md
+4. RESEARCH_AND_DECISIONS_2026-09-23.md
+5. ROADMAP.md
+6. RESUME.md
+7. autonomy/AUTONOMOUS_OPERATOR_MANDATE.md
+8. autonomy/EXECUTION_PROTOCOL.md
+9. autonomy/TASK_QUEUE.md
+10. autonomy/FINALIZATION_AND_HANDOFF.md
+11. all reports relevant to the current queue item
 
 ## Purpose
 
-This directory is the durable execution context for the **Pi-based FAS** line. It exists so work can be resumed from GitHub without depending on chat memory, model memory, local unstated state, or one permanent provider.
+This is the durable GitHub execution context for the Pi-based FAS line. Work must be recoverable after interruption without chat memory, model memory, or one permanent provider.
 
-Read these files before changing the current Pi/FAS implementation:
+## Current architecture
 
-1. `MASTER_PROJECT_MAP.md`
-2. `GITHUB_WORKFLOW.md`
-3. `WORKFLOW_STATE.md`
-4. `RESEARCH_AND_DECISIONS_2026-09-23.md`
-5. `ROADMAP.md`
-6. `RESUME.md`
+Pi 0.85.1 -> Autopilot -> Workflow/Subagents -> central FAS supervisor -> capability-aware routing -> bounded fallback -> evidence/learning -> efficiency -> safety -> verification/review -> state/checkpoint
 
-Dated reports and runtime evidence belong under `docs/FAS_PI/reports/`. Do not place report files directly in this directory.
+## Source of truth
 
-## Important scope split
+GitHub source/tests/history and fresh runtime evidence are authoritative. Reports preserve evidence. Chat is context only.
 
-The repository already contains an older `.fas/FAS_FINAL_PLAN.md` describing a **Python/OpenCode FAS** line. That document remains historical/parallel context and must not be silently treated as the current Pi/FAS architecture.
+## Directory policy
 
-The current line documented here is:
+- docs/FAS_PI/ = state, architecture, workflow, roadmap, resume.
+- docs/FAS_PI/reports/ = dated evidence and reports.
+- docs/FAS_PI/autonomy/ = autonomous operator mandate, protocol, queue, finalization.
+- docs/FAS_PI/checkpoints/ = milestone recovery snapshots.
+- docs/FAS_PI/handoff/ = final release/new-repository handoff.
 
-`Pi 0.85.1 -> Autopilot -> Workflow/Subagents -> central FAS supervisor -> model/provider routing -> bounded fallback -> evidence/learning -> efficiency -> verification/review`
+Never store secrets in these locations.
 
-## Source-of-truth hierarchy
+## Current status
 
-When resuming:
-
-1. GitHub repository code, tests, commits, and this `docs/FAS_PI/` directory are authoritative for project intent/state.
-2. `GITHUB_WORKFLOW.md` defines how work and reports are persisted in GitHub and is part of the canonical execution context.
-3. Fresh runtime evidence is authoritative for claims about what actually runs.
-4. Existing reports are historical evidence; do not turn a report into a new runtime claim without reproving it when the claim matters.
-5. Chat history is context only and never completion proof.
-
-## Secret rule
-
-Never store provider keys, tokens, cookies, passwords, or secret-bearing environment output here.
-
-## Current completion philosophy
-
-A checkbox, plan item, or agent statement is not proof. Completion requires fresh evidence appropriate to the claim: source inspection, focused test, full suite, and/or live runtime proof.
-
-## Current next gate
-
-Leg 1, L6, and Leg 2 are CLOSED. The current gate is Phase 2 implementation in the evidence-backed order recorded in `reports/PHASE2_EVIDENCE_AUDIT_2026-09-23.md`.
+Phase 1 runtime closure: COMPLETE.
+Phase 2 architecture enhancements: IMPLEMENTED/SUBSTANTIALLY COMPLETE.
+Current regression lineage: 469/469 GREEN.
+D local-provider suitable-path live proof: BLOCKED unless a real daemon host exists.
+E real cross-session/multi-process live proof: residual UNKNOWN.
+C role prompt wiring: DEFERRED unless a genuine orchestrator role field exists.
+Current next work: autonomous full-system audit -> justified consolidation -> compatibility -> clean-room -> final E2E -> final handoff.
 
 Do not rerun closed runtime legs unless fresh evidence indicates regression.

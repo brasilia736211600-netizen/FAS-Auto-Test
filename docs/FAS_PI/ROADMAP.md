@@ -1,254 +1,121 @@
 # FAS-Pi Roadmap
 
-Updated: 2026-09-23
+Updated: 2026-09-24
 
 ## Phase 0 — Baseline preservation
 Status: COMPLETE
 
-- Freeze Pi baseline at 0.85.1 for the current proof cycle.
-- Preserve 324/324 green baseline.
-- Preserve /compose.
-- Preserve closed seams and runtime evidence.
+Pi 0.85.1 remains the proven production baseline for this proof cycle.
+Initial full regression lineage: 324/324.
+The lineage later expanded legitimately as tests were added.
 
 ## Phase 1 — Runtime proof closure
-Status: COMPLETE (2026-09-23)
+Status: COMPLETE
 
-### 1.1 Toolchain
-COMPLETE
-
-- Node default = 26.4.0.
-- Pi = 0.85.1.
-- Linux platform confirmed.
-- Existing nvm reused.
-- No repository source changed.
-
-### 1.2 Leg 1
-COMPLETE
-
-- Linux child runtime path proven.
-- FAS extension load proven.
-- child argv proof captured.
-- real child completion proven.
-
-### 1.3 L6
-COMPLETE
-
-- all-candidates-fail/no-previous-model path live-proven cleanly.
-
-### 1.4 Leg 2
-COMPLETE (2026-09-23)
-
-One real provider turn through Workflow child under `fas-router/auto` — proven.
-
-Acceptance evidence (all captured in `docs/FAS_PI/reports/LEG2_WORKFLOW_SUCCESS_2026-09-23.md`):
-
-- credential visible to the same process without value disclosure;
-- child argv;
-- FAS extension load;
-- FAS routing;
-- provider request/response success;
-- workflow success;
-- cleanup.
+- Toolchain: Node 26.4.0, Pi 0.85.1, Linux, cgroup-v2.
+- Leg 1: child FAS path live-proven.
+- L6: all-candidates-fail/no-previous-model live-proven.
+- Leg 2: Workflow -> child -> FAS -> real provider -> success live-proven.
+- Full baseline reverified.
 
 ## Phase 2 — Evidence-backed architecture enhancement
-Status: READY TO IMPLEMENT
+Status: IMPLEMENTED WITH EXPLICIT RESIDUALS
 
-Evidence audit: `docs/FAS_PI/reports/PHASE2_EVIDENCE_AUDIT_2026-09-23.md` (audits A–F,
-read-only, zero source changes). Implementation order: B contract → C roles →
-A Skills → F safety → E resume-from-phase → D local provider.
+### B — Child Result Contract
+COMPLETE
+Structured subagent result envelope and parent validation implemented.
+351/351 after B.
 
-Do these in evidence-first order.
+### C — Role + Capability Mapping
+COMPLETE WITH DEFERRED WIRING
+Pure role-to-existing-constraint mapping for explorer, implementer, tester, reviewer, debugger.
+396/396 after C.
+Do not invent a role field merely to consume the helper.
 
-### 2.1 Pi Skills / progressive disclosure
-Goal: move reusable declarative policy into on-demand Skills without duplicating executable FAS logic.
+### A — Pi Skills
+COMPLETE
+Two minimal declarative on-demand Skills.
+No executable routing/fallback/thinking logic moved to Markdown.
+440/440 after A/F combined lineage.
 
-Checks:
+### F — Safety Gates
+COMPLETE WITH RESIDUAL PLATFORM LIMITATION
+Pre-spawn destructive Git and out-of-scope path gates plus credential-value redaction.
+Pi 0.85.1 has no enforceable in-execution veto hook; preserve this limitation explicitly.
+440/440 after F.
 
-- identify stable policy text;
-- measure context/token effect;
-- add only the minimum Skill set;
-- verify Pi load behavior;
-- regression-test FAS behavior.
+### E — Workflow Resume
+COMPLETE FOR CURRENT MECHANISM
+Resume-from-phase skips verified succeeded outputs and reruns the first non-success.
+458/458 after E.
+Cross-session/multi-process live proof remains UNKNOWN.
 
-Status: COMPLETE (2026-09-24; `docs/FAS_PI/reports/2026-09-24_A_PI_SKILLS.md`).
-Key finding: FAS injects zero policy text today, so A avoids future prompt cost
-(2 Skills, 1,059 B always-on metadata, bodies on demand, 24 focused, 440/440).
-No source modified.
+### D — Local Provider Discovery
+PARTIAL
+Discovery, capability validation, and unavailable path are tested.
+469/469 after D.
+Suitable-provider live proof is BLOCKED without a live daemon.
+Registry admission remains conditional on a future evidence-backed boundary.
 
-### 2.2 Child Result Contract
-Goal: standardize child output as structured evidence.
+## Phase 2.5 — Autonomous completion program
+Status: IN PROGRESS
 
-Minimum candidate fields:
+This is the current main project phase.
 
-- status;
-- files_modified;
-- files_created;
-- tests_run;
-- evidence;
-- problems;
-- conflicts.
+1. State reconciliation.
+2. Full source and file inventory.
+3. Independent correctness audit.
+4. Independent security audit.
+5. TDD coverage-gap audit.
+6. YAGNI/dead-code/duplication audit.
+7. Token/context/thinking/fallback efficiency audit.
+8. Subagents/Workflow/Autopilot/FAS integration audit.
+9. Bootstrap/install/package audit.
+10. Pi compatibility matrix.
+11. Clean-room portability proof.
+12. Final autonomous E2E coding/recovery proof.
+13. Consolidation of only evidence-backed findings.
+14. Final release/security/YAGNI audit.
+15. Final handoff package.
 
-Acceptance (all met 2026-09-24; `docs/FAS_PI/reports/2026-09-24_B_CHILD_RESULT_CONTRACT.md`):
+## Phase 3 — Pi compatibility
+Status: FUTURE / REQUIRED BEFORE ANY BASELINE MOVE
 
-- schema test (27-assertion focused suite, baseline FAIL first);
-- parent consumption test (funnel round-trip + valid-only details attach);
-- no breakage to existing child dispatch (unstructured payloads byte-identical,
-  324 baseline preserved, 351/351 total).
-
-Status: COMPLETE for subagents relay. Child-side emission instruction deferred to
-C (role-gated prompt); workflow's existing structured tool left untouched.
-
-### 2.3 Role + Capability Profiles — COMPLETE (2026-09-24)
-
-Implemented as pure role→constraint mapping over existing scorer fields
-(`~/.pi/extensions/fas/roles.ts`, zero existing-file modifications):
-explorer/implementer/tester/reviewer/debugger, deterministic routing tests,
-fallback preserved, no second ranker, no per-role model lists, no LLM inference.
-Evidence: `docs/FAS_PI/reports/2026-09-24_C_ROLE_ROUTING.md` (45 focused, 396/396).
-
-Remaining: wiring snippets into role-spawn call sites (needs orchestrator-declared
-role field — future step, not speculated).
-
-### 2.3 Role + Capability Profiles
-Goal: route based on task needs rather than only model names.
-
-Minimum candidate roles:
-
-- explorer;
-- implementer;
-- tester;
-- reviewer;
-- researcher;
-- debugger.
-
-Minimum candidate capability metadata:
-
-- reasoning/complexity;
-- tool compatibility;
-- context capacity;
-- vision requirement;
-- thinking levels;
-- provider availability;
-- reliability state.
-
-Acceptance:
-
-- deterministic routing test;
-- fallback test;
-- no duplicate ranking systems.
-
-### 2.4 Local Provider Resilience
-Goal: discover and verify local model providers when available.
-
-Candidates may include Ollama/LM Studio or another Pi-supported local lane.
-
-Rules:
-
-- discovery first;
-- capability filter;
-- live verification;
-- use only when suitable;
-- never assume local quality or availability.
-
-Acceptance:
-
-- discovery test;
-- unavailable-path test;
-- suitable-path test;
-- fallback integration test.
-
-Status: PARTIAL (2026-09-24; `docs/FAS_PI/reports/2026-09-24_D_LOCAL_DISCOVERY.md`).
-Discovery + capability validation + unavailable-path implemented and tested
-(11 focused, 469/469); suitable-path live proof BLOCKED — no daemon on this
-host (live probe 0), never fabricated. Next: suitable-path turn on a host with
-a live daemon, then registry-admission seam with that evidence.
-
-### 2.5 Durability
-Goal: make long-running work resilient to process/session interruption.
-
-Candidate concepts:
-
-- journal;
-- checkpoint;
-- receipt;
-- lease;
-- resume;
-- explicit uncertain-external-write handling.
-
-Acceptance requires a demonstrated failure/restart gap. Do not add a durability framework merely because OpenMuse/AlphaCode have one.
-
-Status: COMPLETE minimal (2026-09-24; `docs/FAS_PI/reports/2026-09-24_E_WORKFLOW_RESUME.md`).
-Resume-from-phase reusing existing versioned snapshots (skip succeeded, rerun
-from first non-success, version gate locked); 18 focused tests incl. live
-spawn-counting resume proof, 458/458. Journal/lease/receipt rejected — nothing
-needed them.
-
-### 2.6 Safety/permission boundary
-Goal: make autonomous execution policy explicit where current FAS behavior is insufficient.
-
-Possible scope:
-
-- destructive Git operation gate;
-- external write review;
-- secret boundary;
-- workspace scope;
-- risky tool classification.
-
-Acceptance requires concrete abuse/regression tests.
-
-Status: COMPLETE (2026-09-24; `docs/FAS_PI/reports/2026-09-24_F_SAFETY_GATES.md`).
-Pre-spawn declaration gates (destructive git + out-of-scope paths) in runPhase,
-credential value-shape redaction hardening, 20 abuse/regression tests, 440/440.
-In-execution veto impossible in Pi 0.85.1 API (observational events only) —
-documented residual risk, no speculative framework added.
-
-### 2.7 Theme
-Goal: optional observability-oriented FAS TUI theme.
-
-Only display state that already exists:
-
-- route;
-- thinking;
-- fallback attempt;
-- evidence status;
-- verification status.
-
-No new runtime state may be introduced merely for cosmetics.
-
-## Phase 3 — Pi compatibility track
-Status: FUTURE
-
-Current Pi release is 0.87.1 as of 2026-09-22, while this FAS baseline is 0.85.1.
-
-Do NOT upgrade the baseline directly.
-
-Instead:
-
-1. create a compatibility branch/matrix;
-2. run existing tests against 0.87.x;
-3. identify actual API/behavior differences;
-4. adapt behind compatibility seams;
-5. prove parity;
-6. only then decide whether the baseline should move.
+Compare Pi 0.85.1 with the current Pi release line.
+Prove API and runtime parity, parent/child FAS seams, and /compose invariance.
+Do not upgrade the production baseline merely because a newer version exists.
 
 ## Phase 4 — Long-horizon autonomy
-Status: FUTURE
+Status: FUTURE / ONLY IF FINAL AUDIT JUSTIFIES IT
 
-Potential target:
+Goal:
+goal -> plan -> execute -> verify -> bounded recover -> checkpoint -> resume -> complete
 
-`goal -> plan -> execute -> verify -> recover -> checkpoint -> resume -> complete`
+No hidden retries.
+No second orchestrator.
+No unbounded autonomous loops.
 
-with no hidden retries and explicit bounded stop conditions.
+## Phase 5 — Final repository publication
+Status: GATED
 
-## Phase 5 — Android integrated runtime
-Status: SEPARATE / FUTURE
+The current repository is the engineering/evidence repository.
+The final repository is created only after technical completion and explicit user approval.
 
-The existing `docs/FAS_ANDROID_INTEGRATED_RUNTIME_PLAN.md` belongs to the earlier Android/OpenCode product line. The Pi/FAS enhancement track must not silently conflate with that roadmap.
+The operator must prepare:
+- final source inventory;
+- release manifest;
+- README;
+- installation/bootstrap;
+- providers/fallbacks;
+- tests/CI;
+- security model;
+- limitations;
+- compatibility;
+- migration procedure;
+- proposed repository tree.
 
-Any integrated Android runtime work needs its own requirements, architecture, tests, and acceptance gate.
+Then stop at FINAL-HANDOFF-READY: USER-APPROVAL-REQUIRED.
 
-## Phase ordering rule
+## Permanent phase rule
 
-Never skip a prerequisite phase because a later feature appears attractive.
-
-The sequence is evidence -> smallest implementation -> focused regression -> full suite -> runtime proof -> state save.
+Never skip evidence -> smallest implementation -> focused regression -> full regression -> runtime proof -> state save.
