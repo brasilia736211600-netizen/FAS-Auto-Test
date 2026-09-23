@@ -46,6 +46,8 @@ Do not replace this baseline with a smaller focused-suite result.
 - Codespace Node/Pi toolchain default repair complete.
 - Leg 2 Workflow success-path turn live-proven (2026-09-23; report
   `docs/FAS_PI/reports/LEG2_WORKFLOW_SUCCESS_2026-09-23.md`; 324/324 re-verified).
+- B Child Result Contract implemented for subagents (2026-09-24; report
+  `docs/FAS_PI/reports/2026-09-24_B_CHILD_RESULT_CONTRACT.md`; 351/351 GREEN).
 
 ## Open work
 

@@ -83,11 +83,15 @@ Minimum candidate fields:
 - problems;
 - conflicts.
 
-Acceptance:
+Acceptance (all met 2026-09-24; `docs/FAS_PI/reports/2026-09-24_B_CHILD_RESULT_CONTRACT.md`):
 
-- schema test;
-- parent consumption test;
-- no breakage to existing child dispatch.
+- schema test (27-assertion focused suite, baseline FAIL first);
+- parent consumption test (funnel round-trip + valid-only details attach);
+- no breakage to existing child dispatch (unstructured payloads byte-identical,
+  324 baseline preserved, 351/351 total).
+
+Status: COMPLETE for subagents relay. Child-side emission instruction deferred to
+C (role-gated prompt); workflow's existing structured tool left untouched.
 
 ### 2.3 Role + Capability Profiles
 Goal: route based on task needs rather than only model names.
