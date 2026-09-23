@@ -11,7 +11,7 @@ Status: COMPLETE
 - Preserve closed seams and runtime evidence.
 
 ## Phase 1 — Runtime proof closure
-Status: IN PROGRESS
+Status: COMPLETE (2026-09-23)
 
 ### 1.1 Toolchain
 COMPLETE
@@ -51,7 +51,7 @@ Acceptance evidence (all captured in `docs/FAS_PI/reports/LEG2_WORKFLOW_SUCCESS_
 - cleanup.
 
 ## Phase 2 — Evidence-backed architecture enhancement
-Status: AUDIT COMPLETE, IMPLEMENTATION NOT STARTED
+Status: READY TO IMPLEMENT
 
 Evidence audit: `docs/FAS_PI/reports/PHASE2_EVIDENCE_AUDIT_2026-09-23.md` (audits A–F,
 read-only, zero source changes). Implementation order: B contract → C roles →
