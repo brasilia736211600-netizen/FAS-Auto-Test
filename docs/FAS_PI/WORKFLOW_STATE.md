@@ -56,6 +56,8 @@ Do not replace this baseline with a smaller focused-suite result.
   `docs/FAS_PI/reports/2026-09-24_F_SAFETY_GATES.md`; 440/440 GREEN).
 - E resume-from-phase implemented (2026-09-24; report
   `docs/FAS_PI/reports/2026-09-24_E_WORKFLOW_RESUME.md`; 458/458 GREEN).
+- D local discovery implemented, live proof BLOCKED (2026-09-24; report
+  `docs/FAS_PI/reports/2026-09-24_D_LOCAL_DISCOVERY.md`; 469/469 GREEN).
 
 ## Open work
 

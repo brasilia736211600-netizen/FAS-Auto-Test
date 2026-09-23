@@ -157,6 +157,12 @@ Acceptance:
 - suitable-path test;
 - fallback integration test.
 
+Status: PARTIAL (2026-09-24; `docs/FAS_PI/reports/2026-09-24_D_LOCAL_DISCOVERY.md`).
+Discovery + capability validation + unavailable-path implemented and tested
+(11 focused, 469/469); suitable-path live proof BLOCKED — no daemon on this
+host (live probe 0), never fabricated. Next: suitable-path turn on a host with
+a live daemon, then registry-admission seam with that evidence.
+
 ### 2.5 Durability
 Goal: make long-running work resilient to process/session interruption.
 

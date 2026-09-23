@@ -28,8 +28,11 @@ F minimal safety gates are COMPLETE (2026-09-24;
 `docs/FAS_PI/reports/2026-09-24_F_SAFETY_GATES.md`).
 E resume-from-phase is COMPLETE (2026-09-24;
 `docs/FAS_PI/reports/2026-09-24_E_WORKFLOW_RESUME.md`).
-Run Phase-2 implementation in audit order: **D** (last) per
-`docs/FAS_PI/reports/PHASE2_EVIDENCE_AUDIT_2026-09-23.md`.
+D local discovery is PARTIAL (2026-09-24;
+`docs/FAS_PI/reports/2026-09-24_D_LOCAL_DISCOVERY.md`): discovery/validation
+done, suitable-path live proof BLOCKED (no daemon). Phase-2 implementation is
+complete to the extent the environment supports — see final verification in
+the D report thread before new work.
 
 Do not spend time redoing closed work. Do not rerun Leg 1, L6, or Leg 2 unless
 fresh evidence shows regression.
