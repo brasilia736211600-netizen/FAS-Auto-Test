@@ -24,17 +24,27 @@ docs/FAS_PI/
 
 Do not create dated reports directly under `docs/FAS_PI/`.
 
-## Muse execution rule
+## Muse execution and report-persistence rule
 
-Muse may create/update reports from the same GitHub Codespace/runtime used for the work. This is preferred for runtime evidence because the report is generated beside the exact source, tests, logs, process evidence, and branch state being validated.
+**Default path: GitHub Codespace + normal Git.** Muse should generate runtime/audit reports inside the same Codespace checkout that produced the evidence, then persist them through the repository Git history.
 
-Preferred persistence path:
+Preferred sequence:
 
-`Codespace -> write report -> inspect report -> git diff -> git commit -> git push`
+`gh codespace ssh -> run/verify -> write report under docs/FAS_PI/reports/ -> inspect report -> git status/diff -> git diff --check -> update state docs when required -> git commit -> git push -> verify remote tree/commit`
 
-Use `gh` for Codespace/GitHub operations when it is the supported mechanism in that environment; use normal `git` for add/commit/push. Never rely on a separate local copy of a report.
+Use `gh` for Codespace lifecycle/access and GitHub inspection when supported; use normal `git` for file staging, commit, and push. `gh` itself is not the report persistence layer; the pushed Git commit is.
 
-A Pi/GitHub extension may be used only when it already participates in the established project workflow and has been verified not to bypass the Codespace/source-of-truth path. It must not create a second reporting authority.
+A previously verified Pi/GitHub extension may be used for GitHub file operations only when it preserves the same checked-out branch, commit history, report path, and verification chain. Do not use it as a parallel reporting authority, and do not generate runtime reports from a detached/local copy when the evidence was produced in Codespace.
+
+For source-only/documentation audits, a verified GitHub extension can be acceptable; for runtime evidence, **Codespace-local report generation is the canonical path**.
+
+## Report lifecycle
+
+A report is created after the evidence is collected, not before. A BLOCKED/FAILED run still receives a report when the attempt materially changes project state or establishes a useful blocker.
+
+For each milestone, prefer one coherent commit containing the report plus the corresponding state updates; never batch unrelated source changes merely to reduce commit count.
+
+Before push, the agent must verify the report path, inspect the exact diff, and confirm no secrets or raw environment dumps are present. After push, verify the remote commit/path so the report is actually recoverable from GitHub.
 
 ## Report policy
 
