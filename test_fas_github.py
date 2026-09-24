@@ -160,3 +160,22 @@ def test_download_artifacts_builds_command(tmp_path):
     dest = download_artifacts("owner/repo", 9, str(tmp_path), runner=runner)
     assert dest == str(tmp_path)
     assert calls[0][:4] == ["gh", "run", "download", "9"]
+
+
+def test_resolve_repository_allows_letter_s():
+    assert (
+        resolve_repository("brasilia736211600-netizen/FAS-Auto-Test")
+        == "brasilia736211600-netizen/FAS-Auto-Test"
+    )
+
+
+def test_download_artifacts_tolerates_empty_run(tmp_path, capsys):
+    from fas_github import download_artifacts
+
+    def runner(command, **kwargs):
+        raise subprocess.CalledProcessError(1, command, "", "no artifacts found")
+
+    dest = download_artifacts("owner/repo", 9, str(tmp_path / "out"), runner=runner)
+    assert dest == str(tmp_path / "out")
+    assert (tmp_path / "out").is_dir()
+    assert "no artifacts" in capsys.readouterr().err

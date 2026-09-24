@@ -38,7 +38,7 @@ def resolve_repository(
 ) -> str:
     """Return an OWNER/REPO GitHub identity for a local path or explicit repo."""
     candidate = Path(repository).expanduser()
-    if not candidate.exists() and re.fullmatch(r"[^/\\s]+/[^/\\s]+", repository):
+    if not candidate.exists() and re.fullmatch(r"[^/\s]+/[^/\s]+", repository):
         return repository
 
     root = candidate.resolve()
@@ -211,11 +211,17 @@ def download_artifacts(
     runner=subprocess.run,
 ) -> str:
     """Download all artifacts of a run into dest, return dest."""
+    import sys
+
     repository = resolve_repository(repository, runner=runner)
-    runner(
-        ["gh", "run", "download", str(run_id), "--repo", repository, "--dir", dest],
-        check=True,
-        capture_output=True,
-        text=True,
-    )
+    try:
+        runner(
+            ["gh", "run", "download", str(run_id), "--repo", repository, "--dir", dest],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    except subprocess.CalledProcessError as exc:
+        print(f"warning: artifact download skipped: {exc.stderr.strip() or exc}", file=sys.stderr)
+    Path(dest).mkdir(parents=True, exist_ok=True)
     return dest

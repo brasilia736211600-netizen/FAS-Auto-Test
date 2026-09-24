@@ -24,12 +24,19 @@ Labels: VERIFIED (fresh evidence this run).
 
 ## 3. Live E2E proof (VERIFIED, free runner)
 
-- Dispatched `cloud-offload.yml` (`task=test`) on `fas-feature-test` via the new
-  `fas offload` path from Termux; polled to completion; conclusion recorded
-  below; artifacts path exercised.
-- LIVE: <to fill after dispatch>
+- Run 1 (35940713958, `task=test`): dispatched + polled from Termux via the new
+  path → `completed/success`. Exposed 2 real bugs, both fixed TDD (see §5).
+- Run 2 (35940934729, `task=test --download`): full loop green, rc 0, empty
+  artifacts tolerated with warning (test task uploads nothing — expected).
+- Phone cost: ~0 CPU; only status polling. Runner cost: ~1 min Ubuntu each.
 
-## 4. Notes / limits
+## 5. Live-found fixes (both TDD, both in)
+
+- Owner/repo regex rejected the letter `s` (raw-string `\\s` bug, pre-existing):
+  live dispatch crashed → failing test → one-char fix → 84/84.
+- Empty-artifact runs crashed `gh run download`: now warns + returns dest.
+
+## 6. Notes / limits
 
 - Free-tier minutes apply (repo is public → effectively unlimited for public).
   Secrets never leave GitHub; phone only sees status/logs/artifacts.
