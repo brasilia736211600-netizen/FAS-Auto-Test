@@ -10,16 +10,26 @@ been created. Nothing below publishes anything without explicit approval.
 - Extras: autopilot checkpoint hardening, Pi 0.85.1↔0.87.1 matrix (baseline
   pinned), cloud-offload option (2 live green runs), workflow fan-out,
   clean-room structural proof.
-- Regression: **489/489 node + 84/84 pytest, 0 failures** (chain
-  324→351→396→420→440→458→469→489).
-- Blocked/unknown (need user/host, not work): Queue 6 E2E + E cross-process
-  live (provider credential), D suitable-path (local daemon).
+- Regression: **516/516 node + 84/84 pytest, 0 failures** (chain
+  324→351→396→420→440→458→469→489→496→498→504→510→512→516).
+- Router hardening (post-handoff-draft): F1 failure observability (T16),
+  F3 within-turn provider breaker (T17), status-from-text advisory (T18),
+  persistent provider cooldown (F7), breaker fail-safe neutrality (F8),
+  extension-lane visibility (D8). Live: bare-parent PARENT-OK; Termux +
+  cloud + purist + mimo + Q8-trial workflow E2Es all PASS; practical
+  autopilot trial 10/10 with adversarial containment (report
+  2026-09-24_AUTOPILOT_TRIAL.md).
+- Working lanes (no key, both hosts): freeflow/mimo-v2.6-flash +
+  freeflow/kilo-auto/free; backup cline-free + openrouter; omniroute PARKED.
+- Remaining external gates (need user/host, not work): spawn_agent live
+  proof (systemd-gated container — rpc children are the supported path),
+  E-full + D-live daemon proofs, 0.87 live-turn, Q8 approval itself.
 
 ## 2. Exact source inventory (production boundary)
 
 | Path (source of truth today) | Files | Fingerprint | In Git? |
 |---|---|---|---|
-| `~/.pi/extensions/fas/` | core.ts, index.ts, roles.ts, local-providers.ts | core `cb24e664` | NO — transfer at publish |
+| `~/.pi/extensions/fas/` | core.ts, index.ts, roles.ts, local-providers.ts | core `155ae074`, index `73239dde`, roles `8395d510` | NO — transfer at publish |
 | `~/.pi/agent/extensions/autopilot/` | index.ts | `8c038dad` | NO — transfer at publish |
 | `~/.pi/agent/skills/` | 2× SKILL.md | content in report A | NO — transfer at publish |
 | pi-enhanced `extensions/workflow/` | runner.ts, schema.ts, resume.ts, safety.ts (+rest untouched) | runner `c20f921d`, schema `f95a471c` | Upstream h4ni0/pi + local seams |
