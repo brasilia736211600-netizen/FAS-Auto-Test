@@ -104,11 +104,14 @@ npm i -g @earendil-works/pi-coding-agent@0.85.1
 fas-pi/
   extensions/fas/            # core, index, roles, local-providers
   extensions/autopilot/      # index
+  extensions/compose/        # index (frozen except proven regressions)
   extensions/workflow/       # full dir (seams included)
   extensions/subagents/      # full dir (seams included)
   skills/fas-*/              # SKILL.md set
+  prompts/fas-*/             # fas-status.md, fas-router-debug.md
   python/                    # fas_*.py + test_*.py + install_fas.sh
   workflows/ci/              # fas-ci, e2e-live, cloud-offload
+  workflows/pi/              # fase2e-termux.yaml (reference E2E workflow)
   docs/                      # curated state + reports
   tests/                     # fas-verify suite (relocated)
   README.md INSTALL.md SECURITY.md COMPATIBILITY.md
@@ -119,7 +122,7 @@ fas-pi/
 "FAS-Pi: a centralized supervisor/policy layer that makes Pi 0.85.1 a
 dependable autonomous coding substrate — evidence-weighted routing, bounded
 fallback, structured child results, roles, Skills, safety gates, resume, and
-parallel fan-out. 489+84 tests green. See INSTALL.md (10 min), SECURITY.md
+parallel fan-out. 516+84 tests green. See INSTALL.md (10 min), SECURITY.md
 (gates + limitations), COMPATIBILITY.md (0.85.1 pinned)."
 
 ## 11. Migration / publish procedure (after approval ONLY)
