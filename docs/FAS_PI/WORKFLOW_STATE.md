@@ -52,6 +52,8 @@ Canonical reports:
 - reports/2026-09-24_D_LOCAL_DISCOVERY.md
 - reports/2026-09-24_CLOUD_OFFLOAD.md
 - reports/2026-09-24_PARALLEL_FANOUT.md
+- reports/2026-09-24_COMPAT_MATRIX.md
+- reports/2026-09-24_CLEANROOM.md
 
 ## Current residuals
 
