@@ -39,5 +39,6 @@ This directory is the durable evidence ledger for the Pi-based FAS project.
 - 2026-09-24_PACKAGE_EVAL.md
 - 2026-09-24_MIMO_ROTATION.md
 - 2026-09-24_AUTOPILOT_TRIAL.md
+- 2026-09-24_Q8_VALIDATION.md
 
 Future final reports go here. Autonomy control documents live under docs/FAS_PI/autonomy/.
