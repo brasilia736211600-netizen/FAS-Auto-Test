@@ -1,7 +1,7 @@
 # LIVE operator state — UPDATED 2026-09-24 post-Termux-E2E (resume here)
 
-HEAD: `4c68de6` (pushed, clean). Full regression post-status-from-text:
-node `504/504` + pytest `84/84`, zero failures.
+HEAD: `pushing` (breaker commit). Full regression post-breaker:
+node `510/510` + pytest `84/84`, zero failures.
 
 ## Last completed point (continue AFTER this)
 
@@ -50,7 +50,7 @@ node `504/504` + pytest `84/84`, zero failures.
 
 ## Fingerprints (unchanged — no source touched)
 
-core `ac88fe44` (F1+F3+status-text), roles `8395d510`, autopilot `8c038dad`, runner `c20f921d`,
+core `155ae074` (F1+F3+text+breaker), index `73239dde`, roles `8395d510`, autopilot `8c038dad`, runner `c20f921d`,
 schema `f95a471c`; fas index `669fdeb7`, compose `59a2b7e5`,
 tool-list `8426bc05`.
 
