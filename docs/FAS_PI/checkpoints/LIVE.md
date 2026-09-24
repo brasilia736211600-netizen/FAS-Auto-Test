@@ -1,6 +1,6 @@
 # LIVE operator state — UPDATED 2026-09-24 post-Termux-E2E (resume here)
 
-HEAD: `913cc1a4a7c19a20e922d6428a36727ae072ed9c` (pushed, clean). Gate: approval still required.
+HEAD: `pushing` (Q8 DONE: fas-pi published d9e1ddf, verified from clone, 100% 18/18). Project complete.
 node `510/510` + pytest `84/84`, zero failures.
 
 ## Last completed point (continue AFTER this)
