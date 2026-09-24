@@ -1,6 +1,6 @@
 # LIVE operator state — UPDATED 2026-09-24 post-Termux-E2E (resume here)
 
-HEAD: `pushing` (mimo rotation: primary mimo-v2.6-flash + kilo-auto/free, E2E PASS on cloud). Working set updated; extensions untouched.
+HEAD: `a5ccbd215c0aa1986607b794a197313434ab55a1` (pushed, clean). Working set updated; extensions untouched.
 node `510/510` + pytest `84/84`, zero failures.
 
 ## Last completed point (continue AFTER this)
