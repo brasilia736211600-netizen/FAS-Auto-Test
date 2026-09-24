@@ -79,7 +79,12 @@ This is the current main project phase.
 15. Final handoff package.
 
 ## Phase 3 — Pi compatibility
-Status: FUTURE / REQUIRED BEFORE ANY BASELINE MOVE
+Status: MATRIX COMPLETE, BASELINE PINNED (2026-09-24)
+
+Matrix: `docs/FAS_PI/reports/2026-09-24_COMPAT_MATRIX.md` — 23/23 used APIs
+present, 0.87.1 boot + FAS load + Skills behavior verified, one concrete
+blocker (TranscriptContext drops `tools` → inferTask degradation; adaptation
+deferred pending runtime proof). 0.85.1 remains the proven baseline.
 
 Compare Pi 0.85.1 with the current Pi release line.
 Prove API and runtime parity, parent/child FAS seams, and /compose invariance.
