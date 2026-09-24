@@ -43,6 +43,10 @@ core `26f3d323` (F1 lastError/lastStatus), roles `8395d510`, autopilot `8c038dad
 schema `f95a471c`; fas index `669fdeb7`, compose `59a2b7e5`,
 tool-list `8426bc05`.
 
+## Just shipped (autopilot, templates)
+
+- FAS prompt templates (local, unversioned): `~/.pi/agent/prompts/fas-status.md` (KB health, no quota) + `fas-router-debug.md` (single bounded probe + classify). Validated frontmatter; usable after `/reload`.
+
 ## Staging (safe to delete, kept for evidence)
 
 ~/fas-e2e-termux (+ sessions dir), ~/.pi/workflows/fase2e-termux.yaml,
