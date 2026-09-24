@@ -1,6 +1,6 @@
 # LIVE operator state — UPDATED 2026-09-24 post-Termux-E2E (resume here)
 
-HEAD: `pushing` (Q8 validation: Termux leg PASS, handoff refreshed 516/516, cloud leg queued). Gate: approval still required.
+HEAD: `913cc1a4a7c19a20e922d6428a36727ae072ed9c` (pushed, clean). Gate: approval still required.
 node `510/510` + pytest `84/84`, zero failures.
 
 ## Last completed point (continue AFTER this)
