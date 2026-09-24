@@ -41,3 +41,32 @@ blocker identified, adaptation deferred pending runtime proof
   parametrization work — small, future).
 - 0.87 parent/child runtime parity turn: BLOCKED (needs credential).
 - Matrix install retained at `~/pi-matrix/087` (local only, not in Git).
+
+## 5. 0.87.1 verified delta (2026-09-24, real d.ts diff, no guessing)
+
+Checked `~/pi-matrix/087` (0.87.1) against global 0.85.1:
+
+- KEEP: all 6 FAS event subscriptions exist in 0.87 `on()` overloads
+  (session_start, agent_start, input, before_agent_start, model_select,
+  turn_end). The 0.87 `emit()` exclusion covers runner-side emit only —
+  FAS never emits, only subscribes. No wiring change needed.
+- KEEP: `shouldStopAfterTurn`→`finishTurn` migration NOT needed — FAS
+  sources contain zero `shouldStopAfterTurn` references (verified by grep
+  over fas/workflow/subagents/compose).
+- KEEP: modelRegistry surface identical (method-name diff empty:
+  getAll/getAvailable/find/getApiKeyAndHeaders/getProvider Lei present).
+- KEEP: `sessionManager.getBranch/getSessionFile` present in 0.87
+  (runner.ts:355/683 safe); registerProvider/appendEntry/sendMessage/
+  registerCommand counts equal across versions.
+- LOW-RISK: `TurnEndEvent` now extends `BoundaryState`
+  (entries/continue/context/outcome). FAS only reads usage via
+  `getContextUsage` and never constructs events; jiti has no static
+  type-check. Runtime risk: low, needs one live 0.87 turn to confirm.
+- OPPORTUNITIES (adopt only with live proof): `AgentBeforeSettleEvent`
+  (boundary hook that can append entries + ensure next request —
+  strictly better than turn_end for FAS decisions);
+  `ContextEditEntry` (canonical context edits — workflow resume/state);
+  `context_with_system` (per-request system transforms — FAS advisory
+  injection without history rewrite).
+- Baseline stays 0.85.1 (mandate rule 17). Migration is opportunistic:
+  no source moves until 0.87 live-turn parity is proven with credential.
