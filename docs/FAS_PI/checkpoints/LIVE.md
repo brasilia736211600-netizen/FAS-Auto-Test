@@ -1,6 +1,6 @@
 # LIVE operator state — UPDATED 2026-09-24 post-Termux-E2E (resume here)
 
-HEAD: `pushing` (extension-lane visibility + D8). Regression 516/516 + 84/84. Multi-provider booking rule: per (lane, host).
+HEAD: `c8c8ff24c7ab2a1d07f699ad6d144738ea714724` (pushed, clean). Regression 516/516 + 84/84. Multi-provider booking rule: per (lane, host).
 node `510/510` + pytest `84/84`, zero failures.
 
 ## Last completed point (continue AFTER this)
