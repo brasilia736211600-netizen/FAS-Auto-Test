@@ -1,40 +1,52 @@
-# LIVE operator state (updated after every milestone; READ me first on reconnect)
+# LIVE operator state — SAVED 2026-09-24 (resume here after hours)
 
-HEAD: `14f2d36` (pushed, clean). All actionable work complete. Standing by at
-FINAL-HANDOFF-READY: USER-APPROVAL-REQUIRED (Queue 8) + credential-gated items.
+HEAD: see `git rev-parse` (all below pushed; tree clean). Suites: node
+`489/489` + D7 discovery cases (61/61 file) · pytest `84/84`. Re-verify with:
+`for t in ~/fas-verify/tests/test-*.mjs; do node $t; done` + `python -m pytest` in ~/FAS.
 
-## Milestones landed (all pushed, remote-verified)
+## Last completed point (continue AFTER this)
 
-B, C, A, F, E, D-partial · autopilot checkpoint fix · compat matrix (baseline
-pinned 0.85.1) · cloud offload (2 live green runs) · workflow fan-out ·
-clean-room structural · Queue 7 audit · handoff package (proposed, unpublished).
+1. Provider DECIDED: zai (direct 3/3 live OK) + openrouter-OAuth (served a real
+   turn) + cline-OAuth (CLINE-OK). opencode bridge REJECTED (upstream TUI-only
+   enforcement, Sep-20 evidence). omniroute PARKED (JS-walled site, no
+   verifiable API/key — adopt only with key + live test).
+2. FAS negative-cost scoring fix DONE (core `cb24e664`→`9693922b`, D7 test
+   green, report `2026-09-24_SCORING_FIX.md` committed).
+3. Firewall/port check DONE: 443 open to all providers from Termux; failures
+   are account-side, never network. No action needed.
+4. Auth truth-source CORRECTION: pi uses `~/.pi/agent/auth.json` (OAuth/key
+   store), NOT env vars. Env-empty readings earlier were wrong-scope.
 
-## Suites
+## NEXT (first thing on return)
 
-node `489/489` (chain 324→351→396→420→440→458→469→489) · pytest `84/84`.
-Re-verify with: `for t in ~/fas-verify/tests/test-*.mjs; do node $t; done`
-and `python -m pytest` in ~/FAS.
+Full workflow E2E on Termux: parent fas-router/auto + `--no-extensions`
+(clean 426-model pool) + `-e fas/workflow/subagents/compose`, 2 real phases in
+a fixture repo (implement tiny feature + run test), safety negative run,
+git check, report + commit. Design ONLY — not started, nothing half-written.
+
+## Then (in order)
+
+- Cloud decision (Codespace vs Google Cloud CLI) — MY call, AFTER provider
+  (provider now settled: decide on return).
+- Queue 6 E2E overflow (subagents-child parts — needs cgroup host).
+- E cross-process live + D live (need credential/daemon respectively).
+- User approvals pending: credential restore (optional now — Termux lanes
+  work), final repository creation (FORBIDDEN until full live proof passes).
 
 ## Fingerprints (extension sources, unversioned — re-verify on any touch)
 
-runner `c20f921d`, schema `f95a471c`, core `cb24e664`, roles `8395d510`,
-autopilot `8c038dad`; unchanged: fas index `669fdeb7`, compose `59a2b7e5`,
+core `9693922b`, roles `8395d510`, autopilot `8c038dad`, runner `c20f921d`,
+schema `f95a471c`; unchanged: fas index `669fdeb7`, compose `59a2b7e5`,
 tool-list `8426bc05`.
 
-## Blocked (need user — nothing to implement meanwhile)
-
-1. Provider credential in Codespace env (was SET, now empty; SET_COUNT=0
-   re-verified): unlocks Queue 6 E2E + E cross-process live + D live.
-   Restore via your secure mechanism; never paste it in chat.
-2. Explicit approval to create the final repository (Queue 8 gate).
-
-## Staging (safe to delete)
+## Staging (safe to delete, kept for evidence)
 
 ~/cleanroom-demo, ~/cleanroom-home, ~/pi-matrix/087, ~/offload-result,
-~/LEG2_PSCAPTURE_2026-09-23.txt, ~/fanout.bak.
+~/LEG2_PSCAPTURE_2026-09-23.txt, ~/fanout.bak, ~/fas-learn-loop.sh,
+~/fas-probe/.
 
 ## Recovery rule
 
 `git -C ~/FAS pull --ff-only`; read this file + TASK_QUEUE.md + latest report;
-continue at the first incomplete item. Never rerun green items. Never create
-the final repo without explicit approval.
+continue at NEXT above. Never rerun green items. Never create the final repo
+without explicit approval AND a passing full live proof.
