@@ -25,5 +25,6 @@ This directory is the durable evidence ledger for the Pi-based FAS project.
 - 2026-09-24_PARALLEL_FANOUT.md
 - 2026-09-24_COMPAT_MATRIX.md
 - 2026-09-24_CLEANROOM.md
+- 2026-09-24_QUEUE7_AUDIT.md
 
 Future final reports go here. Autonomy control documents live under docs/FAS_PI/autonomy/.
