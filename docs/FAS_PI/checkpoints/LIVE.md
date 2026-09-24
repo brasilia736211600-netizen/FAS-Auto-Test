@@ -1,6 +1,6 @@
 # LIVE operator state — UPDATED 2026-09-24 post-Termux-E2E (resume here)
 
-HEAD: `pushing` (autopilot trial PASS: 10/10 incl held-out, adversarial contained, 516/516+84/84). Q8 needs cloud legs + approval.
+HEAD: `558b793320c9b959272ba3cc1bb12f5843361da4` (pushed, clean). Q8 needs cloud legs + approval.
 node `510/510` + pytest `84/84`, zero failures.
 
 ## Last completed point (continue AFTER this)
