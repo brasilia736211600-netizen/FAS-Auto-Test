@@ -28,5 +28,6 @@ This directory is the durable evidence ledger for the Pi-based FAS project.
 - 2026-09-24_QUEUE7_AUDIT.md
 - 2026-09-24_SCORING_FIX.md
 - 2026-09-24_TERMUX_E2E.md
+- 2026-09-24_ROUTER_GAP.md
 
 Future final reports go here. Autonomy control documents live under docs/FAS_PI/autonomy/.
