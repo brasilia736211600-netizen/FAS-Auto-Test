@@ -1,7 +1,7 @@
 # LIVE operator state — UPDATED 2026-09-24 post-Termux-E2E (resume here)
 
-HEAD: `192d2ef` (pushed, clean). Suites unchanged (no source touched):
-node `489/489` + D7 discovery `61/61` + pytest `84/84`.
+HEAD: `431d93c` (pushed, clean). Full regression post-F1:
+node `496/496` + pytest `84/84`, zero failures.
 
 ## Last completed point (continue AFTER this)
 
@@ -21,6 +21,12 @@ node `489/489` + D7 discovery `61/61` + pytest `84/84`.
    use a normal `-p` turn calling `workflow_run`. `--no-extensions`
    strips the cline provider — keep full extension set for cline lanes.
 
+## Just completed (autopilot, this turn)
+
+- Router-gap DIAGNOSED (report `2026-09-24_ROUTER_GAP.md`): 3-fresh-lanes/turn burn, kilo credit-dead throws without status, exploration trap (verified-failure unreachable), keys audited CLEAR.
+- F1 SHIPPED: failure errorMessage+status persisted (T16 FAIL-first 76/78 → 78/78; full 496/496 + 84/84).
+- Cloud DECIDED: Codespace primary (authed, existing codespace, proven), GCloud Shell fallback.
+
 ## NEXT (first thing on return)
 
 1. Cloud decision (Codespace vs Google Cloud CLI) — due now (zai down
@@ -33,7 +39,7 @@ node `489/489` + D7 discovery `61/61` + pytest `84/84`.
 
 ## Fingerprints (unchanged — no source touched)
 
-core `9693922b`, roles `8395d510`, autopilot `8c038dad`, runner `c20f921d`,
+core `26f3d323` (F1 lastError/lastStatus), roles `8395d510`, autopilot `8c038dad`, runner `c20f921d`,
 schema `f95a471c`; fas index `669fdeb7`, compose `59a2b7e5`,
 tool-list `8426bc05`.
 
