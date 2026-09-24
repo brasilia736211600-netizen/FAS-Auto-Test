@@ -1,6 +1,6 @@
 # LIVE operator state — UPDATED 2026-09-24 post-Termux-E2E (resume here)
 
-HEAD: `see below` (pushing). Full regression post-status-from-text:
+HEAD: `4c68de6` (pushed, clean). Full regression post-status-from-text:
 node `504/504` + pytest `84/84`, zero failures.
 
 ## Last completed point (continue AFTER this)
