@@ -1,7 +1,7 @@
 # LIVE operator state — UPDATED 2026-09-24 post-Termux-E2E (resume here)
 
-HEAD: `d0d612e` (pushed, clean). Full regression post-F3:
-node `498/498` + pytest `84/84`, zero failures.
+HEAD: `see below` (pushing). Full regression post-status-from-text:
+node `504/504` + pytest `84/84`, zero failures.
 
 ## Last completed point (continue AFTER this)
 
@@ -33,6 +33,11 @@ node `498/498` + pytest `84/84`, zero failures.
 - Purist parent-routed workflow E2E PASS FIRST TRY (`2026-09-24_PURIST_E2E.md`): 3/3 cline SERVED hops, marker + test green. Queue 6 Termux CLOSED.
 - Queued (not started): status-from-text parsing, cross-turn cooldown, persistent provider breaker, 0.87 checklist, cloud shortlist eval + Q6-overflow.
 
+## Just completed (autopilot, status-from-text)
+
+- Advisory parsing SHIPPED (T18 FAIL-first 84/86 → 86/86; 504/504 + 84/84). Live PARENT-OK, clean cline streak — learning converged.
+- Queued: cross-turn cooldown, persistent provider breaker, 0.87 checklist, cloud eval + Q6-overflow.
+
 ## NEXT (first thing on return)
 
 1. Cloud decision (Codespace vs Google Cloud CLI) — due now (zai down
@@ -45,7 +50,7 @@ node `498/498` + pytest `84/84`, zero failures.
 
 ## Fingerprints (unchanged — no source touched)
 
-core `f7c52161` (F1+F3 breaker), roles `8395d510`, autopilot `8c038dad`, runner `c20f921d`,
+core `ac88fe44` (F1+F3+status-text), roles `8395d510`, autopilot `8c038dad`, runner `c20f921d`,
 schema `f95a471c`; fas index `669fdeb7`, compose `59a2b7e5`,
 tool-list `8426bc05`.
 
