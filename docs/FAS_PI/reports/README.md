@@ -36,5 +36,6 @@ This directory is the durable evidence ledger for the Pi-based FAS project.
 - 2026-09-24_CLOUD_PARITY.md
 - 2026-09-24_POST_CRASH.md
 - 2026-09-24_EXTENSION_LANES.md
+- 2026-09-24_PACKAGE_EVAL.md
 
 Future final reports go here. Autonomy control documents live under docs/FAS_PI/autonomy/.
