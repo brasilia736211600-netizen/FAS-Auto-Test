@@ -99,3 +99,37 @@ def test_cli_parser_requires_task_for_run():
         assert exc.code != 0
     else:
         raise AssertionError("run without task must be rejected")
+
+
+def test_cli_offload_success_downloads(monkeypatch, tmp_path, capsys):
+    import fas_github
+    from fas_github import WorkflowRun
+
+    calls = []
+    monkeypatch.setattr(fas_github, "dispatch_workflow", lambda *a, **k: (calls.append(("dispatch", a, k)), 77)[1])
+    monkeypatch.setattr(
+        fas_github, "wait_run", lambda *a, **k: WorkflowRun(77, "completed", "success", "abc", "w")
+    )
+    monkeypatch.setattr(fas_github, "download_artifacts", lambda *a, **k: (calls.append("download"), str(tmp_path))[1])
+    rc = fas_cli.main(
+        ["offload", "--repo", "owner/repo", "--field", "task=build", "--download", str(tmp_path)]
+    )
+    out = capsys.readouterr().out
+    assert rc == 0
+    assert "77" in out and "success" in out and str(tmp_path) in out
+    assert [c for c in calls if c == "download"]
+
+
+def test_cli_offload_rejects_bad_field(capsys):
+    assert fas_cli.main(["offload", "--repo", "owner/repo", "--field", "noequals"]) == 2
+
+
+def test_cli_offload_failure_conclusion_returns_1(monkeypatch, capsys):
+    import fas_github
+    from fas_github import WorkflowRun
+
+    monkeypatch.setattr(fas_github, "dispatch_workflow", lambda *a, **k: 78)
+    monkeypatch.setattr(
+        fas_github, "wait_run", lambda *a, **k: WorkflowRun(78, "completed", "failure", "abc", "w")
+    )
+    assert fas_cli.main(["offload", "--repo", "owner/repo"]) == 1

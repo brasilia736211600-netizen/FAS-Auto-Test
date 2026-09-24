@@ -46,6 +46,14 @@ def _parser() -> argparse.ArgumentParser:
     watch.add_argument("--poll-limit", type=int, default=60)
     watch.add_argument("--poll-seconds", type=float, default=5.0)
     watch.add_argument("--test-cmd")
+    offload = sub.add_parser("offload", help="run a heavy job on GitHub Actions instead of this phone")
+    offload.add_argument("--repo", default=".")
+    offload.add_argument("--workflow", default="cloud-offload.yml")
+    offload.add_argument("--ref", default="main")
+    offload.add_argument("--field", action="append", default=[], metavar="KEY=VALUE")
+    offload.add_argument("--timeout", type=float, default=1800.0)
+    offload.add_argument("--poll-seconds", type=float, default=30.0)
+    offload.add_argument("--download", default=None, metavar="DIR")
     return parser
 
 
@@ -193,6 +201,34 @@ def _watch(args: argparse.Namespace) -> int:
     return 0
 
 
+def _offload(args: argparse.Namespace) -> int:
+    from fas_github import classify_run, dispatch_workflow, download_artifacts, wait_run
+
+    fields: dict[str, str] = {}
+    for item in args.field or []:
+        if "=" not in item:
+            print(f"bad --field (want KEY=VALUE): {item}", file=sys.stderr)
+            return 2
+        key, value = item.split("=", 1)
+        fields[key.strip()] = value
+    run_id = dispatch_workflow(args.repo, args.workflow, ref=args.ref, fields=fields)
+    print(f"dispatched run {run_id}")
+    try:
+        run = wait_run(
+            args.repo,
+            run_id,
+            interval_s=args.poll_seconds,
+            timeout_s=args.timeout,
+        )
+    except TimeoutError as exc:
+        print(str(exc), file=sys.stderr)
+        return 3
+    print(f"conclusion: {classify_run(run)}")
+    if args.download:
+        print(download_artifacts(args.repo, run_id, args.download))
+    return 0 if run.conclusion == "success" else 1
+
+
 def _route_decision(route: dict[str, str]):
     from model_router import Capability, RouteDecision
 
@@ -206,6 +242,8 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if args.command == "watch":
         return _watch(args)
+    if args.command == "offload":
+        return _offload(args)
     return _run_task(args)
 
 

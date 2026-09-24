@@ -1,12 +1,15 @@
 """Minimal GitHub Actions bridge for FAS running on Termux/Linux."""
 from __future__ import annotations
 
+from builtins import TimeoutError
+
 import json
 import re
 import subprocess
+import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Sequence
+from typing import Callable, Sequence
 from urllib.parse import urlparse
 
 
@@ -142,3 +145,77 @@ def classify_run(run: WorkflowRun) -> str:
     if run.conclusion in {"cancelled", "timed_out"}:
         return "non_actionable"
     return "unknown"
+
+
+def dispatch_workflow(
+    repository: str,
+    workflow: str,
+    *,
+    ref: str = "main",
+    fields: dict | None = None,
+    runner=subprocess.run,
+) -> int:
+    """Trigger a workflow_dispatch run, return the newest run id for it."""
+    repository = resolve_repository(repository, runner=runner)
+    command = ["gh", "workflow", "run", workflow, "--repo", repository, "--ref", ref]
+    for key, value in (fields or {}).items():
+        command += ["-f", f"{key}={value}"]
+    runner(command, check=True, capture_output=True, text=True)
+    data = _run_json(
+        [
+            "gh",
+            "run",
+            "list",
+            "--repo",
+            repository,
+            "--workflow",
+            workflow,
+            "--limit",
+            "1",
+            "--json",
+            "databaseId",
+        ],
+        runner=runner,
+    )
+    if not isinstance(data, list) or not data:
+        raise ValueError("no run found after dispatch")
+    return int(data[0]["databaseId"])
+
+
+def wait_run(
+    repository: str,
+    run_id: int,
+    *,
+    runner=subprocess.run,
+    sleeper: Callable[[float], None] = time.sleep,
+    interval_s: float = 15.0,
+    timeout_s: float = 600.0,
+) -> WorkflowRun:
+    """Poll until the run completes; bounded attempts, raise TimeoutError."""
+    attempts = 0
+    while True:
+        run = view_run(repository, run_id, runner=runner)
+        if run.status == "completed":
+            return run
+        attempts += 1
+        if attempts * interval_s >= timeout_s:
+            raise TimeoutError(f"run {run_id} still {run.status} after {timeout_s}s")
+        sleeper(interval_s)
+
+
+def download_artifacts(
+    repository: str,
+    run_id: int,
+    dest: str,
+    *,
+    runner=subprocess.run,
+) -> str:
+    """Download all artifacts of a run into dest, return dest."""
+    repository = resolve_repository(repository, runner=runner)
+    runner(
+        ["gh", "run", "download", str(run_id), "--repo", repository, "--dir", dest],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    return dest

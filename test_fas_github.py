@@ -95,3 +95,68 @@ def test_classify_terminal_states():
     assert classify_run(WorkflowRun(1, "completed", "success", "a", "ci")) == "success"
     assert classify_run(WorkflowRun(2, "completed", "failure", "a", "ci")) == "failure"
     assert classify_run(WorkflowRun(3, "completed", "timed_out", "a", "ci")) == "non_actionable"
+
+
+def _runner_script(responses):
+    calls = []
+
+    def runner(command, **kwargs):
+        calls.append(command)
+        payload = responses[min(len(calls) - 1, len(responses) - 1)]
+        return subprocess.CompletedProcess(command, 0, json.dumps(payload), "")
+
+    return runner, calls
+
+
+def test_dispatch_workflow_triggers_and_returns_newest_run():
+    from fas_github import dispatch_workflow
+
+    runner, calls = _runner_script([{}, [{"databaseId": 77}]])
+    run_id = dispatch_workflow(
+        "owner/repo",
+        "cloud-offload.yml",
+        ref="main",
+        fields={"task": "build"},
+        runner=runner,
+    )
+    assert run_id == 77
+    assert calls[0][:4] == ["gh", "workflow", "run", "cloud-offload.yml"]
+    assert "--repo" in calls[0] and "owner/repo" in calls[0]
+    assert "task=build" in calls[0]
+
+
+def test_wait_run_polls_until_completed():
+    from fas_github import wait_run
+
+    sleeps = []
+    runner, calls = _runner_script(
+        [
+            {"databaseId": 7, "status": "queued", "conclusion": None, "headSha": "a", "workflowName": "w"},
+            {"databaseId": 7, "status": "in_progress", "conclusion": None, "headSha": "a", "workflowName": "w"},
+            {"databaseId": 7, "status": "completed", "conclusion": "success", "headSha": "a", "workflowName": "w"},
+        ]
+    )
+    run = wait_run("owner/repo", 7, runner=runner, sleeper=sleeps.append, interval_s=1, timeout_s=60)
+    assert (run.status, run.conclusion) == ("completed", "success")
+    assert len(calls) == 3 and len(sleeps) == 2
+
+
+def test_wait_run_times_out_bounded():
+    import pytest
+
+    from fas_github import TimeoutError, wait_run
+
+    payload = {"databaseId": 7, "status": "in_progress", "conclusion": None, "headSha": "a", "workflowName": "w"}
+    runner, calls = _runner_script([payload])
+    with pytest.raises(TimeoutError):
+        wait_run("owner/repo", 7, runner=runner, sleeper=lambda s: None, interval_s=5, timeout_s=12)
+    assert len(calls) <= 3
+
+
+def test_download_artifacts_builds_command(tmp_path):
+    from fas_github import download_artifacts
+
+    runner, calls = _runner_script([{}])
+    dest = download_artifacts("owner/repo", 9, str(tmp_path), runner=runner)
+    assert dest == str(tmp_path)
+    assert calls[0][:4] == ["gh", "run", "download", "9"]

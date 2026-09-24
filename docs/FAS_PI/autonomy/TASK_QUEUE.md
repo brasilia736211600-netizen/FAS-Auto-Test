@@ -47,6 +47,17 @@ Never batch unrelated source changes merely to reduce commit count.
 
 Build a matrix for Pi 0.85.1 and the current Pi release line. Do not move the production baseline until test parity and parent/child runtime parity are proven and /compose remains intact.
 
+## Queue 4B — Cloud offload option (weak-phone directive)
+
+The operator phone is weak: heavy jobs (app builds, test suites, long runs)
+must be runnable on free cloud resources instead of Termux, as an option.
+Standing solution: reusable `cloud-offload.yml` (workflow_dispatch) +
+`fas offload` dispatcher (dispatch/wait/download) + per-repo `offload-build.sh`
+convention. Status: IMPLEMENTED (report
+`docs/FAS_PI/reports/2026-09-24_CLOUD_OFFLOAD.md`). Remaining: per-app
+`offload-build.sh` files (e.g. Android APK builds) land with their own repos
+and evidence, not here.
+
 ## Queue 5 — Clean-room portability
 
 Prove installation and autonomous execution on an unrelated repository without copying project source into that target. Include persistence and Subagents where supported.
