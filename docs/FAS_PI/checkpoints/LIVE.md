@@ -1,7 +1,7 @@
 # LIVE operator state — UPDATED 2026-09-24 post-Termux-E2E (resume here)
 
-HEAD: `431d93c` (pushed, clean). Full regression post-F1:
-node `496/496` + pytest `84/84`, zero failures.
+HEAD: `d0d612e` (pushed, clean). Full regression post-F3:
+node `498/498` + pytest `84/84`, zero failures.
 
 ## Last completed point (continue AFTER this)
 
@@ -27,6 +27,12 @@ node `496/496` + pytest `84/84`, zero failures.
 - F1 SHIPPED: failure errorMessage+status persisted (T16 FAIL-first 76/78 → 78/78; full 496/496 + 84/84).
 - Cloud DECIDED: Codespace primary (authed, existing codespace, proven), GCloud Shell fallback.
 
+## Just completed (autopilot, F3 + purist E2E)
+
+- F3 v1 SHIPPED: within-turn provider circuit breaker (T17 FAIL-first → 80/80; full 498/498 + 84/84). Live: bare-parent PARENT-OK (openrouter-404 → kilo-402 → cline SERVED).
+- Purist parent-routed workflow E2E PASS FIRST TRY (`2026-09-24_PURIST_E2E.md`): 3/3 cline SERVED hops, marker + test green. Queue 6 Termux CLOSED.
+- Queued (not started): status-from-text parsing, cross-turn cooldown, persistent provider breaker, 0.87 checklist, cloud shortlist eval + Q6-overflow.
+
 ## NEXT (first thing on return)
 
 1. Cloud decision (Codespace vs Google Cloud CLI) — due now (zai down
@@ -39,7 +45,7 @@ node `496/496` + pytest `84/84`, zero failures.
 
 ## Fingerprints (unchanged — no source touched)
 
-core `26f3d323` (F1 lastError/lastStatus), roles `8395d510`, autopilot `8c038dad`, runner `c20f921d`,
+core `f7c52161` (F1+F3 breaker), roles `8395d510`, autopilot `8c038dad`, runner `c20f921d`,
 schema `f95a471c`; fas index `669fdeb7`, compose `59a2b7e5`,
 tool-list `8426bc05`.
 
@@ -51,7 +57,7 @@ tool-list `8426bc05`.
 
 ~/fas-e2e-termux (+ sessions dir), ~/.pi/workflows/fase2e-termux.yaml,
 ~/e2e-out.txt, ~/e2e-list.txt, ~/e2e-run1.txt, ~/e2e-run2.txt,
-~/e2e-neg.txt, ~/test.js.bak; plus prior: ~/cleanroom-demo,
+~/e2e-neg.txt, ~/test.js.bak, ~/fas-e2e-router, ~/e2e-router1.txt; plus prior: ~/cleanroom-demo,
 ~/cleanroom-home, ~/pi-matrix/087, ~/offload-result,
 ~/LEG2_PSCAPTURE_2026-09-23.txt, ~/fanout.bak, ~/fas-learn-loop.sh,
 ~/fas-probe/.
