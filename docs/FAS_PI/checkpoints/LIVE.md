@@ -1,6 +1,6 @@
 # LIVE operator state — UPDATED 2026-09-24 post-Termux-E2E (resume here)
 
-HEAD: `pushing` (breaker commit). Full regression post-breaker:
+HEAD: `90a7e4bcedff8cc4f0a9352431ac8cbbfc68dee9` (pushed, clean). Full regression post-breaker:
 node `510/510` + pytest `84/84`, zero failures.
 
 ## Last completed point (continue AFTER this)
