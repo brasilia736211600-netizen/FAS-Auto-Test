@@ -1,6 +1,6 @@
 # LIVE operator state — UPDATED 2026-09-24 post-Termux-E2E (resume here)
 
-HEAD: `239aa745e6ea28973c44f6c2e4b8975696f0a993` (pushed, clean). Full regression: node `512/512` + pytest `84/84`. Cloud staging reverted to stock; spawn_agent cloud-unproven (systemd), rpc children are the supported path.
+HEAD: `pushing` (extension-lane visibility + D8). Regression 516/516 + 84/84. Multi-provider booking rule: per (lane, host).
 node `510/510` + pytest `84/84`, zero failures.
 
 ## Last completed point (continue AFTER this)
