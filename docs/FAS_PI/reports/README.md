@@ -21,5 +21,6 @@ This directory is the durable evidence ledger for the Pi-based FAS project.
 - 2026-09-24_F_SAFETY_GATES.md
 - 2026-09-24_E_WORKFLOW_RESUME.md
 - 2026-09-24_D_LOCAL_DISCOVERY.md
+- 2026-09-24_CLOUD_OFFLOAD.md
 
 Future final reports go here. Autonomy control documents live under docs/FAS_PI/autonomy/.
