@@ -40,6 +40,7 @@ Current project milestone: AUTONOMOUS FULL-SYSTEM COMPLETION PROGRAM.
 - D Local Provider Discovery/validation complete for discovery/unavailable paths; suitable live proof BLOCKED without a real daemon.
 - Cloud offload option complete (fas offload + reusable workflow, 2 live green runs).
 - Parallel workflow fan-out/fan-in complete (15 focused tests, 489/489 GREEN).
+- FAS negative-cost scoring fix (dead-lane pin evidence, 61/61 discovery suite).
 
 Canonical reports:
 - reports/LEG2_WORKFLOW_SUCCESS_2026-09-23.md
