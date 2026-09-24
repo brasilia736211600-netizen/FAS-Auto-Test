@@ -1,6 +1,6 @@
 # LIVE operator state — UPDATED 2026-09-24 post-Termux-E2E (resume here)
 
-HEAD: `f1f9e44` (pushed, clean). Cloud parity: 510/510 + 84/84 on Linux, cgroup DELEGATION-OK, codespace stopped. Creds EMPTY — live proofs need user key.
+HEAD: `pushing` (post-crash: cloud routing wins + F8). Full regression: node `512/512` + pytest `84/84`. Cloud staging reverted to stock; spawn_agent cloud-unproven (systemd), rpc children are the supported path.
 node `510/510` + pytest `84/84`, zero failures.
 
 ## Last completed point (continue AFTER this)
