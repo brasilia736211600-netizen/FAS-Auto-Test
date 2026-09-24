@@ -38,6 +38,8 @@ Current project milestone: AUTONOMOUS FULL-SYSTEM COMPLETION PROGRAM.
 - F Safety Gates complete, with documented Pi 0.85.1 in-execution veto limitation.
 - E Workflow Resume complete for current mechanism; cross-session/multi-process proof remains residual UNKNOWN.
 - D Local Provider Discovery/validation complete for discovery/unavailable paths; suitable live proof BLOCKED without a real daemon.
+- Cloud offload option complete (fas offload + reusable workflow, 2 live green runs).
+- Parallel workflow fan-out/fan-in complete (15 focused tests, 489/489 GREEN).
 
 Canonical reports:
 - reports/LEG2_WORKFLOW_SUCCESS_2026-09-23.md
@@ -48,6 +50,8 @@ Canonical reports:
 - reports/2026-09-24_F_SAFETY_GATES.md
 - reports/2026-09-24_E_WORKFLOW_RESUME.md
 - reports/2026-09-24_D_LOCAL_DISCOVERY.md
+- reports/2026-09-24_CLOUD_OFFLOAD.md
+- reports/2026-09-24_PARALLEL_FANOUT.md
 
 ## Current residuals
 
