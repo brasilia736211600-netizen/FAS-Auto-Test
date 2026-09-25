@@ -1,6 +1,6 @@
 # LIVE operator state — UPDATED 2026-09-24 post-Termux-E2E (resume here)
 
-HEAD: `pushing` (/ap KB-consult fix; autopilot c00cd1ac; 522/522+84/84; fas-pi sync next).
+HEAD: `1fbd85934084224c2355a1a9171c46a4cf962e24` (pushed, clean).
 node `510/510` + pytest `84/84`, zero failures.
 
 ## Last completed point (continue AFTER this)
