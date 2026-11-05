@@ -1,0 +1,60 @@
+name: Build Arabic Investment Report PDF
+
+on:
+  push:
+    branches: [fas-feature-test]
+    paths:
+      - "reports/YEMEN_SANAA_INVESTMENT_REPORT_2026_AR.html"
+      - ".github/workflows/build-investment-report.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: arabic-investment-report
+  cancel-in-progress: false
+
+jobs:
+  build-pdf:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout report branch
+        uses: actions/checkout@v4
+        with:
+          ref: fas-feature-test
+          fetch-depth: 0
+
+      - name: Install Arabic fonts and PDF renderer
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y fonts-noto-core
+          python -m pip install --upgrade pip
+          python -m pip install weasyprint
+
+      - name: Render PDF
+        run: |
+          mkdir -p reports
+          python - <<'PY'
+          from weasyprint import HTML
+          source = "reports/YEMEN_SANAA_INVESTMENT_REPORT_2026_AR.html"
+          target = "reports/YEMEN_SANAA_INVESTMENT_REPORT_2026_AR.pdf"
+          HTML(filename=source, base_url=".").write_pdf(target)
+          import os
+          size = os.path.getsize(target)
+          if size < 50000:
+              raise SystemExit(f"PDF unexpectedly small: {size} bytes")
+          print(f"Generated {target}: {size:,} bytes")
+          PY
+
+      - name: Commit generated PDF
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add reports/YEMEN_SANAA_INVESTMENT_REPORT_2026_AR.pdf
+          if git diff --cached --quiet; then
+            echo "PDF is unchanged; no commit required."
+          else
+            git commit -m "docs: publish Arabic Yemen investment report PDF"
+            git push origin HEAD:fas-feature-test
+          fi
