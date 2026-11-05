@@ -56,5 +56,6 @@ jobs:
             echo "PDF is unchanged; no commit required."
           else
             git commit -m "docs: publish Arabic Yemen investment report PDF"
+            git pull --rebase origin fas-feature-test
             git push origin HEAD:fas-feature-test
           fi
